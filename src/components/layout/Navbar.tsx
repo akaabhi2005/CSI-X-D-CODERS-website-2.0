@@ -97,8 +97,8 @@ export function Navbar() {
             className="fixed inset-0 z-[100] bg-slate-950/95 backdrop-blur-3xl overflow-y-auto overflow-x-hidden pt-24 sm:pt-28 pb-12 px-4 sm:px-6 flex flex-col justify-start md:justify-center items-center min-h-screen"
           >
             {/* Decorative Background Elements */}
-            <div className={cn("absolute top-1/4 left-1/4 w-96 h-96 blur-[150px] rounded-full pointer-events-none", config.glowClass1)} />
-            <div className={cn("absolute bottom-1/4 right-1/4 w-96 h-96 blur-[150px] rounded-full pointer-events-none", config.glowClass2)} />
+            <div className={cn("absolute top-1/4 left-1/4 w-96 h-96 blur-[80px] md:blur-[150px] opacity-60 md:opacity-100 rounded-full pointer-events-none", config.glowClass1)} />
+            <div className={cn("absolute bottom-1/4 right-1/4 w-96 h-96 blur-[80px] md:blur-[150px] opacity-60 md:opacity-100 rounded-full pointer-events-none", config.glowClass2)} />
 
             <div className="w-full max-w-4xl mx-auto my-auto grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 relative z-10">
               
@@ -178,3 +178,4 @@ export function Navbar() {
     </>
   );
 }
+

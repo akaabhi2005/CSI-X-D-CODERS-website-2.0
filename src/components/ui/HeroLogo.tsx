@@ -147,7 +147,7 @@ export function HeroLogo() {
               ease: "easeInOut",
             }}
             className={cn(
-              "w-56 h-56 sm:w-72 sm:h-72 md:w-[360px] md:h-[360px] lg:w-[420px] lg:h-[420px] rounded-full blur-[80px] sm:blur-[100px] transition-colors duration-500",
+              "w-56 h-56 sm:w-72 sm:h-72 md:w-[360px] md:h-[360px] lg:w-[420px] lg:h-[420px] rounded-full blur-[80px] sm:blur-[60px] md:blur-[100px] opacity-60 md:opacity-100 transition-colors duration-500",
               config.glowClass1
             )}
           />
@@ -392,3 +392,4 @@ export function HeroLogo() {
     </div>
   );
 }
+

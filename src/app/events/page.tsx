@@ -21,8 +21,8 @@ export default function EventsPage() {
   const [eventsData, setEventsData] = useState<EventItem[]>([]);
   const [visibleCount, setVisibleCount] = useState(6);
 
-  const loadData = () => {
-    setEventsData(DataStore.getEvents());
+  const loadData = async () => {
+    setEventsData(await DataStore.getEvents());
   };
 
   useEffect(() => {
@@ -31,7 +31,22 @@ export default function EventsPage() {
     return () => window.removeEventListener("csi_data_updated", loadData);
   }, []);
 
-  const filteredEvents = eventsData.filter(event => event.category === activeTab);
+  // Helper to parse date string for sorting (newest first)
+  const parseDateForSort = (dateStr: string) => {
+    // Clean strings like "22 April onwards" or "Ongoing" to just dates if possible
+    let cleanStr = dateStr.replace(/onwards/i, "").replace(/Multiple Days/i, "").replace(/Ongoing/i, "").trim();
+    // If it's just a month and year like "February 2024", add a day so it parses correctly
+    if (/^[A-Za-z]+\s+\d{4}$/.test(cleanStr)) {
+      cleanStr = `1 ${cleanStr}`;
+    }
+    const timestamp = new Date(cleanStr).getTime();
+    return isNaN(timestamp) ? 0 : timestamp;
+  };
+
+  const filteredEvents = eventsData
+    .filter(event => event.category === activeTab)
+    .sort((a, b) => parseDateForSort(b.date) - parseDateForSort(a.date));
+    
   const visibleEvents = filteredEvents.slice(0, visibleCount);
 
   useEffect(() => {
@@ -52,8 +67,8 @@ export default function EventsPage() {
   return (
     <div className="relative min-h-screen overflow-hidden pb-32">
       {/* Ambient Backgrounds */}
-      <div className={cn("absolute top-0 left-0 w-full h-[500px] blur-[150px] pointer-events-none -z-10", config.glowClass1)} />
-      <div className={cn("absolute top-1/3 right-0 w-[500px] h-[500px] blur-[150px] pointer-events-none -z-10", config.glowClass2)} />
+      <div className={cn("absolute top-0 left-0 w-full h-[500px] blur-[80px] md:blur-[150px] opacity-60 md:opacity-100 pointer-events-none -z-10", config.glowClass1)} />
+      <div className={cn("absolute top-1/3 right-0 w-[500px] h-[500px] blur-[80px] md:blur-[150px] opacity-60 md:opacity-100 pointer-events-none -z-10", config.glowClass2)} />
 
       {/* Hero Section */}
       <section className="pt-32 px-4 md:px-16 lg:px-24 max-w-7xl mx-auto text-center mb-16">
@@ -107,7 +122,7 @@ export default function EventsPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div 
           layout
-          className="grid grid-cols-1 lg:grid-cols-2 gap-10"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
         >
           <AnimatePresence mode="popLayout">
             {visibleEvents.length > 0 ? (
@@ -123,7 +138,7 @@ export default function EventsPage() {
                 >
                   <div>
                     {/* Event Image Banner */}
-                    <div className="relative h-64 sm:h-72 md:h-80 w-full overflow-hidden bg-slate-950">
+                    <div className="relative h-48 sm:h-56 md:h-60 w-full overflow-hidden bg-slate-950">
                       <img 
                         src={event.image} 
                         alt={event.title} 
@@ -145,13 +160,13 @@ export default function EventsPage() {
                     </div>
 
                     {/* Event Details */}
-                    <div className="p-8 md:p-10">
-                      <h3 className="text-2xl sm:text-3xl font-extrabold text-white mb-4 group-hover:text-sky-300 transition-colors tracking-tight">
+                    <div className="p-6 md:p-8">
+                      <h3 className="text-xl sm:text-2xl font-extrabold text-white mb-3 group-hover:text-sky-300 transition-colors tracking-tight">
                         {event.title}
                       </h3>
                       
                       {/* Meta Information Pills */}
-                      <div className="flex flex-wrap items-center gap-3 mb-6 text-xs sm:text-sm font-mono text-slate-300">
+                      <div className="flex flex-wrap items-center gap-3 mb-4 text-xs sm:text-sm font-mono text-slate-300">
                         <div className="flex items-center px-3.5 py-1.5 rounded-xl bg-slate-950/80 border border-slate-800">
                           <Calendar className="w-4 h-4 mr-2 text-sky-400 shrink-0" />
                           <span>{event.date}</span>
@@ -166,16 +181,16 @@ export default function EventsPage() {
                         </div>
                       </div>
                       
-                      <p className="text-slate-300 text-sm sm:text-base leading-relaxed font-light line-clamp-4">
+                      <p className="text-slate-300 text-sm leading-relaxed font-light line-clamp-2">
                         {event.description}
                       </p>
                     </div>
                   </div>
 
-                  <div className="p-8 md:p-10 pt-0">
+                  <div className="p-6 md:p-8 pt-0">
                     <button
                       type="button"
-                      className="w-full py-4 rounded-2xl bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold flex items-center justify-center gap-2 text-sm shadow-[0_0_25px_rgba(56,189,248,0.3)] transition-all duration-300 hover:scale-[1.02] cursor-pointer"
+                      className="w-full py-3 rounded-xl bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold flex items-center justify-center gap-2 text-sm shadow-[0_0_25px_rgba(56,189,248,0.3)] transition-all duration-300 hover:scale-[1.02] cursor-pointer"
                     >
                       View Details
                       <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -217,3 +232,4 @@ export default function EventsPage() {
     </div>
   );
 }
+

@@ -11,12 +11,14 @@ import {
   DataStore, EventItem, TeamMemberItem, LegacyHeadItem, SubTeamItem, 
   CoreValueItem, NewsIssueItem, GalleryItem, ClubStats 
 } from "@/lib/dataStore";
+import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 
 type ActiveTab = "dashboard" | "events" | "team" | "about" | "legacy" | "news" | "gallery" | "stats";
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [activeTab, setActiveTab] = useState<ActiveTab>("dashboard");
   const [notification, setNotification] = useState<string | null>(null);
@@ -55,49 +57,74 @@ export default function AdminPage() {
   const [coreValueForm, setCoreValueForm] = useState<Partial<CoreValueItem> & { pointsText?: string }>({});
   const [newsForm, setNewsForm] = useState<Partial<NewsIssueItem> & { topicsText?: string }>({});
   const [galleryForm, setGalleryForm] = useState<Partial<GalleryItem>>({});
+  const [gallerySelectedFile, setGallerySelectedFile] = useState<File | null>(null);
+  const [teamSelectedFile, setTeamSelectedFile] = useState<File | null>(null);
+  const [legacySelectedFile, setLegacySelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   
   // Password change state
   const [newPassword, setNewPassword] = useState("");
   const [showPasswordChange, setShowPasswordChange] = useState(false);
 
   // Load from DataStore
-  const reloadData = () => {
-    setEvents(DataStore.getEvents());
-    setTeam(DataStore.getTeam());
-    setLegacyHeads(DataStore.getLegacyHeads());
-    setSubTeams(DataStore.getSubTeams());
-    setCoreValues(DataStore.getCoreValues());
-    setNewsIssues(DataStore.getNewsIssues());
-    setGallery(DataStore.getGallery());
-    setStats(DataStore.getStats());
+  const reloadData = async () => {
+    setEvents(await DataStore.getEvents());
+    setTeam(await DataStore.getTeam());
+    setLegacyHeads(await DataStore.getLegacyHeads());
+    setSubTeams(await DataStore.getSubTeams());
+    setCoreValues(await DataStore.getCoreValues());
+    setNewsIssues(await DataStore.getNewsIssues());
+    setGallery(await DataStore.getGallery());
+    setStats(await DataStore.getStats());
   };
 
   useEffect(() => {
-    if (isAuthenticated) {
-      reloadData();
-    }
-  }, [isAuthenticated]);
+    // Check active session on load
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setIsAuthenticated(true);
+        reloadData();
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        setIsAuthenticated(true);
+        reloadData();
+      } else {
+        setIsAuthenticated(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const showToast = (msg: string) => {
     setNotification(msg);
     setTimeout(() => setNotification(null), 3500);
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const storedPwd = DataStore.getAdminPassword();
-    if (password === storedPwd) {
+    if (!email || !password) {
+      alert("Please enter both email and password.");
+      return;
+    }
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      alert("Login failed: " + error.message);
+      setPassword("");
+    } else {
       setIsAuthenticated(true);
       setPassword("");
       showToast("Signed in to Admin CMS successfully!");
-    } else {
-      alert("Invalid master password. Access denied.");
-      setPassword("");
     }
   };
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
     setIsAuthenticated(false);
+    setEmail("");
     setPassword("");
     showToast("Signed out.");
   };
@@ -112,8 +139,8 @@ export default function AdminPage() {
   };
 
   // --- EXPORT & IMPORT BACKUP --- //
-  const handleExportBackup = () => {
-    const backup = DataStore.exportBackup();
+  const handleExportBackup = async () => {
+    const backup = await DataStore.exportBackup();
     const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -128,11 +155,11 @@ export default function AdminPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (evt) => {
+    reader.onload = async (evt) => {
       try {
         const parsed = JSON.parse(evt.target?.result as string);
-        if (DataStore.importBackup(parsed)) {
-          reloadData();
+        if (await DataStore.importBackup(parsed)) {
+          await reloadData();
           showToast("Data backup restored successfully!");
         } else {
           alert("Invalid backup file structure.");
@@ -144,10 +171,10 @@ export default function AdminPage() {
     reader.readAsText(file);
   };
 
-  const handleResetDefaults = () => {
+  const handleResetDefaults = async () => {
     if (confirm("Are you sure you want to reset all data to official defaults? This will erase custom additions.")) {
-      DataStore.resetToDefaults();
-      reloadData();
+      await DataStore.resetToDefaults();
+      await reloadData();
       showToast("Reset to official defaults complete!");
     }
   };
@@ -219,6 +246,7 @@ export default function AdminPage() {
 
   // --- TEAM CRUD --- //
   const openTeamModal = (item?: TeamMemberItem) => {
+    setTeamSelectedFile(null);
     if (item) {
       setModalMode("edit");
       setEditingId(item.id);
@@ -232,15 +260,18 @@ export default function AdminPage() {
       setTeamForm({
         name: "",
         position: "CORE COMMITTEE MEMBER",
+        branch: "",
         image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300",
         bio: "",
+        level: 5,
+        domain: "technical",
         skillsText: "Development, Problem Solving",
         socials: { linkedin: "https://linkedin.com", github: "https://github.com", email: "" }
       });
     }
   };
 
-  const handleSaveTeam = (e: React.FormEvent) => {
+  const handleSaveTeam = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!teamForm.name || !teamForm.position) return;
     const skillsArray = (teamForm.skillsText || "")
@@ -248,21 +279,56 @@ export default function AdminPage() {
       .map(s => s.trim())
       .filter(s => s !== "");
 
+    let finalImageUrl = teamForm.image || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300";
+
+    if (teamSelectedFile) {
+      setIsUploading(true);
+      const formData = new FormData();
+      formData.append("file", teamSelectedFile);
+      try {
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+        const result = await res.json();
+        
+        if (result.success) {
+          finalImageUrl = result.url;
+        } else {
+          alert("Failed to upload image.");
+          setIsUploading(false);
+          return;
+        }
+      } catch (err) {
+        console.error("Upload failed", err);
+        alert("Error uploading image.");
+        setIsUploading(false);
+        return;
+      }
+    }
+    
+    setIsUploading(false);
+
     let updated: TeamMemberItem[];
     if (modalMode === "edit" && editingId) {
+      const { skillsText, ...cleanTeamForm } = teamForm;
       updated = team.map(m => m.id === editingId ? {
         ...m,
-        ...teamForm,
+        ...cleanTeamForm,
+        image: finalImageUrl,
         skills: skillsArray,
-        socials: teamForm.socials || {}
+        socials: cleanTeamForm.socials || {}
       } as TeamMemberItem : m);
     } else {
       const newItem: TeamMemberItem = {
         id: `team-${Date.now()}`,
         name: teamForm.name || "",
         position: teamForm.position || "CORE COMMITTEE MEMBER",
-        image: teamForm.image || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300",
+        branch: teamForm.branch || "",
+        image: finalImageUrl,
         bio: teamForm.bio || "",
+        level: teamForm.level || 5,
+        domain: teamForm.domain || "technical",
         skills: skillsArray,
         socials: teamForm.socials || {}
       };
@@ -296,6 +362,7 @@ export default function AdminPage() {
 
   // --- LEGACY (HALL OF FAME) CRUD --- //
   const openLegacyModal = (item?: LegacyHeadItem) => {
+    setLegacySelectedFile(null);
     if (item) {
       setModalMode("edit");
       setEditingId(item.id);
@@ -315,12 +382,43 @@ export default function AdminPage() {
     }
   };
 
-  const handleSaveLegacy = (e: React.FormEvent) => {
+  const handleSaveLegacy = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!legacyForm.name || !legacyForm.bio) return;
+
+    setIsUploading(true);
+    let finalImageUrl = legacyForm.image || "";
+
+    if (legacySelectedFile) {
+      try {
+        const formData = new FormData();
+        formData.append("file", legacySelectedFile);
+        
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: formData
+        });
+        
+        const result = await res.json();
+        
+        if (result.success) {
+          finalImageUrl = result.url;
+        } else {
+          alert("Failed to upload image.");
+          setIsUploading(false);
+          return;
+        }
+      } catch (err) {
+        console.error("Upload failed", err);
+        alert("Error uploading image.");
+        setIsUploading(false);
+        return;
+      }
+    }
+
     let updated: LegacyHeadItem[];
     if (modalMode === "edit" && editingId) {
-      updated = legacyHeads.map(l => l.id === editingId ? { ...l, ...legacyForm } as LegacyHeadItem : l);
+      updated = legacyHeads.map(l => l.id === editingId ? { ...l, ...legacyForm, image: finalImageUrl } as LegacyHeadItem : l);
     } else {
       const newItem: LegacyHeadItem = {
         id: `legacy-${Date.now()}`,
@@ -328,7 +426,7 @@ export default function AdminPage() {
         role: legacyForm.role || "Former Head",
         tenure: legacyForm.tenure || "Leadership & Guidance",
         placedAt: legacyForm.placedAt || "Top Placement",
-        image: legacyForm.image || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400&h=400",
+        image: finalImageUrl || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400&h=400",
         bio: legacyForm.bio || "",
         highlight: legacyForm.highlight || "Mentorship & Leadership"
       };
@@ -337,6 +435,7 @@ export default function AdminPage() {
     setLegacyHeads(updated);
     DataStore.saveLegacyHeads(updated);
     setModalMode(null);
+    setIsUploading(false);
     showToast("Hall of Fame leader saved successfully!");
   };
 
@@ -381,9 +480,10 @@ export default function AdminPage() {
 
     let updated: SubTeamItem[];
     if (modalMode === "edit" && editingId) {
+      const { pointsText, ...cleanSubTeamForm } = subTeamForm;
       updated = subTeams.map(st => st.id === editingId ? {
         ...st,
-        ...subTeamForm,
+        ...cleanSubTeamForm,
         points: pts
       } as SubTeamItem : st);
     } else {
@@ -445,9 +545,10 @@ export default function AdminPage() {
 
     let updated: CoreValueItem[];
     if (modalMode === "edit" && editingId) {
+      const { pointsText, ...cleanCoreValueForm } = coreValueForm;
       updated = coreValues.map(cv => cv.id === editingId ? {
         ...cv,
-        ...coreValueForm,
+        ...cleanCoreValueForm,
         points: pts
       } as CoreValueItem : cv);
     } else {
@@ -514,13 +615,14 @@ export default function AdminPage() {
 
     let updated: NewsIssueItem[];
     if (modalMode === "edit" && editingId) {
+      const { topicsText, ...cleanNewsForm } = newsForm;
       updated = newsIssues.map(n => n.id === editingId ? {
         ...n,
-        ...newsForm,
-        pageCount: Number(newsForm.pageCount) || 16,
+        ...cleanNewsForm,
+        pageCount: Number(cleanNewsForm.pageCount) || 16,
         topics: topicsArray,
-        isCurrent: Boolean(newsForm.isCurrent)
-      } as NewsIssueItem : (newsForm.isCurrent ? { ...n, isCurrent: false } : n));
+        isCurrent: Boolean(cleanNewsForm.isCurrent)
+      } as NewsIssueItem : (cleanNewsForm.isCurrent ? { ...n, isCurrent: false } : n));
     } else {
       const newItem: NewsIssueItem = {
         id: `news-${Date.now()}`,
@@ -585,24 +687,60 @@ export default function AdminPage() {
     }
   };
 
-  const handleSaveGallery = (e: React.FormEvent) => {
+  const handleSaveGallery = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!galleryForm.title || !galleryForm.image) return;
+    if (!galleryForm.title) return;
+    if (!galleryForm.image && !gallerySelectedFile) return;
+
+    setIsUploading(true);
+    let finalImageUrl = galleryForm.image || "";
+
+    if (gallerySelectedFile) {
+      try {
+        const formData = new FormData();
+        formData.append("file", gallerySelectedFile);
+        
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: formData
+        });
+        
+        const result = await res.json();
+        
+        if (result.success) {
+          finalImageUrl = result.url;
+        } else {
+          alert("Failed to upload image.");
+          setIsUploading(false);
+          return;
+        }
+      } catch (err) {
+        console.error("Upload failed", err);
+        alert("Error uploading image.");
+        setIsUploading(false);
+        return;
+      }
+    }
+
     let updated: GalleryItem[];
     if (modalMode === "edit" && editingId) {
-      updated = gallery.map(g => g.id === editingId ? { ...g, ...galleryForm } as GalleryItem : g);
+      updated = gallery.map(g => g.id === editingId ? { ...g, ...galleryForm, image: finalImageUrl } as GalleryItem : g);
     } else {
       const newItem: GalleryItem = {
         id: `gal-${Date.now()}`,
         title: galleryForm.title || "",
         detail: galleryForm.detail || "",
-        image: galleryForm.image || "",
+        image: finalImageUrl,
         size: (galleryForm.size as any) || "small"
       };
       updated = [newItem, ...gallery];
     }
     setGallery(updated);
     DataStore.saveGallery(updated);
+    
+    // Reset states
+    setGallerySelectedFile(null);
+    setIsUploading(false);
     setModalMode(null);
     showToast("Gallery moment saved!");
   };
@@ -681,7 +819,7 @@ export default function AdminPage() {
   if (!isAuthenticated) {
     return (
       <div className="min-h-[80vh] flex items-center justify-center px-4 relative overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-sky-500/15 blur-[160px] rounded-full -z-10" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-sky-500/15 blur-[80px] md:blur-[160px] opacity-60 md:opacity-100 rounded-full -z-10" />
         <div className="bg-slate-900/90 backdrop-blur-2xl border border-slate-800 p-8 sm:p-10 rounded-3xl w-full max-w-md shadow-2xl relative">
           <div className="flex justify-center mb-6">
             <div className="p-4 bg-sky-500/10 rounded-2xl border border-sky-500/30 text-sky-400 shadow-[0_0_20px_rgba(56,189,248,0.2)]">
@@ -694,10 +832,19 @@ export default function AdminPage() {
           </p>
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
-              <label className="block text-xs font-mono uppercase text-slate-400 mb-2">Master Password</label>
+              <label className="block text-xs font-mono uppercase text-slate-400 mb-2">Admin Email</label>
+              <input 
+                type="email" 
+                placeholder="admin@csisrmcem.org" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-all text-sm font-mono tracking-wider mb-4"
+              />
+              <label className="block text-xs font-mono uppercase text-slate-400 mb-2">Password</label>
               <input 
                 type="password" 
-                placeholder="Enter master password" 
+                placeholder="Enter password" 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
@@ -1553,12 +1700,52 @@ export default function AdminPage() {
                   <input type="text" placeholder="e.g. FOUNDER & CEO or CORE COMMITTEE MEMBER" required value={teamForm.position || ""} onChange={(e) => setTeamForm({ ...teamForm, position: e.target.value })} className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm" />
                 </div>
                 <div>
-                  <label className="block text-xs font-mono uppercase text-slate-400 mb-1">Profile Photo URL</label>
-                  <input type="text" placeholder="e.g. /images/... or https://..." value={teamForm.image || ""} onChange={(e) => setTeamForm({ ...teamForm, image: e.target.value })} className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm" />
-                  {teamForm.image && (
+                  <label className="block text-xs font-mono uppercase text-slate-400 mb-1">Branch</label>
+                  <input type="text" placeholder="e.g. CSE, IT, DS, AL" value={teamForm.branch || ""} onChange={(e) => setTeamForm({ ...teamForm, branch: e.target.value })} className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-mono uppercase text-slate-400 mb-1">Hierarchy Level</label>
+                    <select value={teamForm.level || 5} onChange={(e) => setTeamForm({ ...teamForm, level: parseInt(e.target.value) })} className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm">
+                      <option value={1}>Level 1 (President)</option>
+                      <option value={2}>Level 2 (VP)</option>
+                      <option value={3}>Level 3 (Head)</option>
+                      <option value={4}>Level 4 (Co-head)</option>
+                      <option value={5}>Level 5 (Member)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-mono uppercase text-slate-400 mb-1">Domain Wing</label>
+                    <select value={teamForm.domain || "technical"} onChange={(e) => setTeamForm({ ...teamForm, domain: e.target.value })} className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm">
+                      <option value="technical">Technical</option>
+                      <option value="content">Content</option>
+                      <option value="design">Design</option>
+                      <option value="photo">Photography</option>
+                      <option value="pr">PR & Marketing</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-mono uppercase text-slate-400 mb-1">Upload Profile Photo (JPG, PNG)</label>
+                  <input 
+                    type="file" 
+                    accept="image/jpeg, image/png, image/webp, image/jpg"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files.length > 0) {
+                        setTeamSelectedFile(e.target.files[0]);
+                      }
+                    }} 
+                    className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-sky-500/20 file:text-sky-400 hover:file:bg-sky-500/30" 
+                  />
+                  {teamForm.image && !teamSelectedFile && (
                     <div className="mt-2 flex items-center gap-3 p-2 bg-slate-950 rounded-xl border border-slate-800">
                       <img src={teamForm.image} alt="Preview" className="w-10 h-10 rounded-full object-cover border border-slate-700" onError={(e) => { (e.target as any).style.display = 'none'; }} />
-                      <span className="text-xs text-slate-400 font-mono truncate">Preview Thumbnail</span>
+                      <span className="text-xs text-slate-400 font-mono truncate">Current Thumbnail</span>
+                    </div>
+                  )}
+                  {teamSelectedFile && (
+                    <div className="mt-2 text-xs text-sky-400 font-mono">
+                      Selected: {teamSelectedFile.name}
                     </div>
                   )}
                 </div>
@@ -1570,7 +1757,7 @@ export default function AdminPage() {
                   <label className="block text-xs font-mono uppercase text-slate-400 mb-1">Bio / Role Description</label>
                   <textarea rows={2} placeholder="Brief summary of member's responsibilities" value={teamForm.bio || ""} onChange={(e) => setTeamForm({ ...teamForm, bio: e.target.value })} className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm" />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div>
                     <label className="block text-xs font-mono uppercase text-slate-400 mb-1">LinkedIn URL</label>
                     <input type="text" placeholder="https://linkedin.com/in/..." value={teamForm.socials?.linkedin || ""} onChange={(e) => setTeamForm({ ...teamForm, socials: { ...teamForm.socials, linkedin: e.target.value } })} className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm" />
@@ -1579,8 +1766,14 @@ export default function AdminPage() {
                     <label className="block text-xs font-mono uppercase text-slate-400 mb-1">GitHub URL</label>
                     <input type="text" placeholder="https://github.com/..." value={teamForm.socials?.github || ""} onChange={(e) => setTeamForm({ ...teamForm, socials: { ...teamForm.socials, github: e.target.value } })} className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm" />
                   </div>
+                  <div>
+                    <label className="block text-xs font-mono uppercase text-slate-400 mb-1">Email</label>
+                    <input type="email" placeholder="e.g. name@example.com" value={teamForm.socials?.email || ""} onChange={(e) => setTeamForm({ ...teamForm, socials: { ...teamForm.socials, email: e.target.value } })} className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm" />
+                  </div>
                 </div>
-                <button type="submit" className="w-full py-3 bg-sky-500 hover:bg-sky-400 text-white font-bold rounded-xl text-sm transition-all shadow-md">Save Member</button>
+                <button type="submit" disabled={isUploading} className="w-full py-3 bg-sky-500 hover:bg-sky-400 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl text-sm transition-all shadow-md">
+                  {isUploading ? "Uploading Image & Saving..." : "Save Member"}
+                </button>
               </form>
             )}
 
@@ -1690,11 +1883,25 @@ export default function AdminPage() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-mono uppercase text-slate-400 mb-1">Photo URL</label>
-                  <input type="text" placeholder="e.g. /images/... or https://..." value={legacyForm.image || ""} onChange={(e) => setLegacyForm({ ...legacyForm, image: e.target.value })} className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm" />
-                  {legacyForm.image && (
+                  <label className="block text-xs font-mono uppercase text-slate-400 mb-1">Upload Photo (JPG, PNG, WebP)</label>
+                  <input 
+                    type="file" 
+                    accept="image/jpeg, image/png, image/webp, image/jpg"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files.length > 0) {
+                        setLegacySelectedFile(e.target.files[0]);
+                      }
+                    }} 
+                    className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-sky-500/20 file:text-sky-400 hover:file:bg-sky-500/30" 
+                  />
+                  {(legacySelectedFile || legacyForm.image) && (
                     <div className="mt-2 flex items-center gap-3 p-2 bg-slate-950 rounded-xl border border-slate-800">
-                      <img src={legacyForm.image} alt="Preview" className="w-10 h-10 rounded-full object-cover border border-slate-700" onError={(e) => { (e.target as any).style.display = 'none'; }} />
+                      <img 
+                        src={legacySelectedFile ? URL.createObjectURL(legacySelectedFile) : (legacyForm.image || "")} 
+                        alt="Preview" 
+                        className="w-10 h-10 rounded-full object-cover border border-slate-700" 
+                        onError={(e) => { (e.target as any).style.display = 'none'; }} 
+                      />
                       <span className="text-xs text-slate-400 font-mono truncate">Photo Preview</span>
                     </div>
                   )}
@@ -1776,11 +1983,25 @@ export default function AdminPage() {
                   <input type="text" required value={galleryForm.title || ""} onChange={(e) => setGalleryForm({ ...galleryForm, title: e.target.value })} className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm" />
                 </div>
                 <div>
-                  <label className="block text-xs font-mono uppercase text-slate-400 mb-1">Image URL</label>
-                  <input type="text" required placeholder="e.g. /images/... or https://..." value={galleryForm.image || ""} onChange={(e) => setGalleryForm({ ...galleryForm, image: e.target.value })} className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm" />
-                  {galleryForm.image && (
+                  <label className="block text-xs font-mono uppercase text-slate-400 mb-1">Upload Image (JPG, PNG, WebP)</label>
+                  <input 
+                    type="file" 
+                    accept="image/jpeg, image/png, image/webp, image/jpg"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files.length > 0) {
+                        setGallerySelectedFile(e.target.files[0]);
+                      }
+                    }} 
+                    className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-sky-500/20 file:text-sky-400 hover:file:bg-sky-500/30" 
+                  />
+                  {(gallerySelectedFile || galleryForm.image) && (
                     <div className="mt-2 rounded-xl overflow-hidden border border-slate-800 h-28 bg-black">
-                      <img src={galleryForm.image} alt="Preview" className="w-full h-full object-cover" onError={(e) => { (e.target as any).style.display = 'none'; }} />
+                      <img 
+                        src={gallerySelectedFile ? URL.createObjectURL(gallerySelectedFile) : (galleryForm.image || "")} 
+                        alt="Preview" 
+                        className="w-full h-full object-cover" 
+                        onError={(e) => { (e.target as any).style.display = 'none'; }} 
+                      />
                     </div>
                   )}
                 </div>
@@ -1797,7 +2018,9 @@ export default function AdminPage() {
                   <label className="block text-xs font-mono uppercase text-slate-400 mb-1">Caption Details</label>
                   <textarea rows={2} value={galleryForm.detail || ""} onChange={(e) => setGalleryForm({ ...galleryForm, detail: e.target.value })} className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm" />
                 </div>
-                <button type="submit" className="w-full py-3 bg-sky-500 hover:bg-sky-400 text-white font-bold rounded-xl text-sm transition-all shadow-md">Save Photo</button>
+                <button type="submit" disabled={isUploading} className="w-full py-3 bg-sky-500 hover:bg-sky-400 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl text-sm transition-all shadow-md">
+                  {isUploading ? "Uploading Image & Saving..." : "Save Photo"}
+                </button>
               </form>
             )}
 
@@ -1807,3 +2030,4 @@ export default function AdminPage() {
     </div>
   );
 }
+

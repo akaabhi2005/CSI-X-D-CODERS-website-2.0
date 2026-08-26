@@ -1,4 +1,5 @@
 "use client";
+import { supabase } from "./supabase";
 
 // ============================================================================
 // DATA MODELS
@@ -24,6 +25,9 @@ export interface TeamMemberItem {
   image: string;
   bio: string;
   skills: string[];
+  branch?: string;
+  level?: number;
+  domain?: string;
   socials: {
     linkedin?: string;
     github?: string;
@@ -112,50 +116,146 @@ export interface WebsiteDataBackup {
 export const defaultEvents: EventItem[] = [
   { 
     id: "evt-1", 
-    title: "Hackathon Decoded 2024", 
-    date: "August 25, 2024", 
-    time: "10:00 AM (48 Hrs)",
-    location: "Main Auditorium, SRMCEM",
-    category: "upcoming", 
+    title: "Introduction to Flutter", 
+    date: "15 October 2022", 
+    time: "7:00 PM",
+    location: "Google Meet",
+    category: "past", 
     color: "sky",
-    image: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&q=80&w=800&h=400",
-    description: "Our flagship 48-hour coding marathon. Gather your team, brainstorm innovative ideas, and build solutions for real-world problems to win massive prizes.",
-    registrationUrl: "https://forms.google.com"
+    image: "https://images.unsplash.com/photo-1617042375876-a13e36732a30?auto=format&fit=crop&q=80&w=800&h=400",
+    description: "An introductory webinar covering the fundamentals of the Flutter framework for cross-platform app development. Speaker: Markandey Pathak.",
+    registrationUrl: ""
   },
   { 
     id: "evt-2", 
-    title: "Web3 & Smart Contracts Masterclass", 
-    date: "September 10, 2024", 
-    time: "02:00 PM",
-    location: "Seminar Hall 2",
-    category: "upcoming", 
+    title: "Introduction to Python", 
+    date: "04 November 2022", 
+    time: "10:00 AM",
+    location: "Seminar Hall, F-Block",
+    category: "past", 
     color: "blue",
-    image: "https://images.unsplash.com/photo-1639762681485-074b7f4ec651?auto=format&fit=crop&q=80&w=800&h=400",
-    description: "Dive deep into the world of Blockchain, Smart Contracts, and Decentralized Apps (dApps) with industry experts leading the charge.",
-    registrationUrl: "https://forms.google.com"
+    image: "/events/pythonworkshop.jpg.jpeg",
+    description: "A beginner-level session introducing students to Python programming fundamentals and its applications.",
+    registrationUrl: ""
   },
   { 
     id: "evt-3", 
-    title: "Daily DSA Sprint & Contest #12", 
-    date: "August 20, 2024", 
-    time: "In Progress",
-    location: "Lab 4, CSE Block",
-    category: "current", 
+    title: "National Youth Day Celebration", 
+    date: "16 January 2023", 
+    time: "12:40 PM",
+    location: "Seminar Hall, A-Block",
+    category: "past", 
     color: "cyan",
-    image: "https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?auto=format&fit=crop&q=80&w=800&h=400",
-    description: "An ongoing intensive competitive programming contest testing dynamic programming, graph theory, and algorithmic optimization.",
-    registrationUrl: "https://forms.google.com"
+    image: "/events/nationalyouthday.jpg.jpeg",
+    description: "Tech talk featuring discussions on Smart India Hackathon, Innovation and Technology, GSoC, and insights of Hackathons.",
+    registrationUrl: ""
   },
   { 
     id: "evt-4", 
-    title: "Techkriti 2024", 
-    date: "March 15, 2024", 
-    time: "Multiple Days",
+    title: "IdeaFest 2024", 
+    date: "29 April 2024", 
+    time: "10:00 AM - 5:00 PM",
+    location: "SRMCEM, Lucknow",
+    category: "past", 
+    color: "purple",
+    image: "/events/ideafest.jpg.jpeg",
+    description: "A competitive hackathon with cash prizes up to ₹8,000. Title Sponsor: Coding Blocks, Lucknow.",
+    registrationUrl: ""
+  },
+  { 
+    id: "evt-5", 
+    title: "C++ Voyage: Rookie to Industry Ace", 
+    date: "05 December 2024", 
+    time: "1:00 PM",
     location: "SRMCEM Campus",
     category: "past", 
     color: "indigo",
-    image: "https://images.unsplash.com/photo-1540317580384-e5d43616b9aa?auto=format&fit=crop&q=80&w=800&h=400",
-    description: "Our grand annual technical festival featuring 10+ sub-events, coding competitions, robotics arena, and guest speakers.",
+    image: "/events/c++voyaoge.jpg.jpeg",
+    description: "A programming workshop designed to take beginners through the fundamentals of C++ towards industry-level proficiency.",
+    registrationUrl: ""
+  },
+  { 
+    id: "evt-6", 
+    title: "Cupid Coding: The Singles-Friendly DSA Contest", 
+    date: "17 February 2026", 
+    time: "11:00 AM",
+    location: "G-607",
+    category: "past", 
+    color: "orange",
+    image: "/events/cupidcoding.jpg.jpeg",
+    description: "\"Commit to Code, NOT Chaos\" - a Valentine-themed Data Structures & Algorithms contest.",
+    registrationUrl: ""
+  },
+  {
+    id: "evt-7",
+    title: "Codeshalla - 7-Day C++ Programming Bootcamp",
+    date: "22 April onwards",
+    time: "Flexible",
+    location: "Discord Channel",
+    category: "past",
+    color: "sky",
+    image: "/events/codeshalla.jpg.jpeg",
+    description: "A 7-day online coding bootcamp covering C++ programming, conducted through interactive Discord sessions.",
+    registrationUrl: ""
+  },
+  {
+    id: "evt-8",
+    title: "Web Shalla",
+    date: "15 May onwards",
+    time: "Flexible",
+    location: "Discord Channel",
+    category: "past",
+    color: "indigo",
+    image: "/events/webshalla.jpg.jpeg",
+    description: "'Your Journey from User to Creator Starts Here' - a comprehensive web development series.",
+    registrationUrl: ""
+  },
+  {
+    id: "evt-9",
+    title: "Byte Battle",
+    date: "02 May 2025",
+    time: "12:15 PM",
+    location: "Seminar Hall, A-Block",
+    category: "past",
+    color: "cyan",
+    image: "/events/bytebattle.jpg.jpeg",
+    description: "Multi-language coding battle (C, Python, C++, Java, C#) with prizes for winners and certificates for all participants.",
+    registrationUrl: ""
+  },
+  {
+    id: "evt-10",
+    title: "Explore Tech",
+    date: "14 September 2025",
+    time: "8:00 PM",
+    location: "SRMCEM Campus",
+    category: "past",
+    color: "blue",
+    image: "https://images.unsplash.com/photo-1627398242454-45a1465c2479?auto=format&fit=crop&q=80&w=800&h=400",
+    description: "Workshop covering VS Code, GitHub, and LeetCode, mentored by 3rd-year student mentors.",
+    registrationUrl: ""
+  },
+  {
+    id: "evt-11",
+    title: "Tech Talk: Dive into the World of AI",
+    date: "13 November 2025",
+    time: "11:00 AM",
+    location: "Seminar Hall, A-Block",
+    category: "past",
+    color: "purple",
+    image: "/events/techtalk.jpg.jpeg",
+    description: "A session exploring the world of Artificial Intelligence by Arjit Verma. Certificates were provided to all attendees.",
+    registrationUrl: ""
+  },
+  {
+    id: "evt-12",
+    title: "SecOps - Ethical Hacking",
+    date: "TBA",
+    time: "Flexible",
+    location: "SRMCEM Campus",
+    category: "upcoming",
+    color: "orange",
+    image: "/events/ethicalhacking.jpg.jpeg",
+    description: "Ethical hacking contest with cash prizes for the top 3 participants.",
     registrationUrl: ""
   }
 ];
@@ -165,7 +265,7 @@ export const defaultTeam: TeamMemberItem[] = [
     id: "team-1", 
     name: "Abhay Shanker Tiwari", 
     position: "FOUNDER & CEO", 
-    image: "https://images.unsplash.com/photo-1556157382-97eda2d62296?auto=format&fit=crop&q=80&w=300", 
+    image: "/team/abhay.jpg.jpeg", 
     bio: "Visionary leader driving the club's mission to foster technological excellence and innovation.", 
     skills: ["Leadership", "Vision", "Strategy"], 
     socials: { linkedin: "https://linkedin.com", github: "https://github.com", email: "ceo@csisrmcem.org" } 
@@ -174,71 +274,283 @@ export const defaultTeam: TeamMemberItem[] = [
     id: "team-2", 
     name: "Abhishek Soni", 
     position: "CO-FOUNDER & COO", 
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=300", 
+    image: "/team/abhishek.jpg.jpeg", 
     bio: "Co-Founder & COO directing operations, business strategy, engineering workflows, and team execution.", 
     skills: ["Operations", "Strategy", "Execution"], 
-    socials: { linkedin: "https://linkedin.com", github: "https://github.com" } 
+    socials: { linkedin: "https://www.linkedin.com/in/abhishek-soni-06725326b/", github: "https://github.com/akaabhi2005", email: "abhishek@csisrmcem.org" } 
   },
   { 
     id: "team-3", 
-    name: "Vanshika Saxena", 
-    position: "CORE COMMITTEE MEMBER", 
-    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=300", 
-    bio: "Core contributor focusing on community engagement and managing technical events smoothly.", 
-    skills: ["Management", "Community", "Events"], 
+    name: "Mugdh Mohan", 
+    position: "WEB DOMAIN HEAD", 
+    image: "/team/mugdh.jpg.jpeg", 
+    bio: "Leading the web development domain, architecture, and frontend excellence.", 
+    skills: ["React", "Next.js", "Architecture"], 
+    branch: "IT",
     socials: { linkedin: "https://linkedin.com" } 
   },
   { 
     id: "team-4", 
-    name: "Abhinav Singh", 
-    position: "CORE COMMITTEE MEMBER", 
-    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=300", 
-    bio: "Technical lead ensuring all systems and projects run efficiently without any bottlenecks.", 
-    skills: ["Engineering", "Architecture", "Cloud"], 
-    socials: { github: "https://github.com" } 
+    name: "Supriya Singh", 
+    position: "WEB DOMAIN CO-HEAD", 
+    image: "/team/supriya.jpg.jpeg", 
+    bio: "Managing full-stack projects, mentorship, and web infrastructure.", 
+    skills: ["Node.js", "Backend", "Leadership"], 
+    branch: "IT",
+    socials: { linkedin: "https://linkedin.com" } 
+  },
+  { 
+    id: "team-5", 
+    name: "Shriyansh Verma", 
+    position: "APP DOMAIN HEAD", 
+    image: "/team/shriyansh.jpg.jpeg", 
+    bio: "Guiding the mobile application development team using Flutter and React Native.", 
+    skills: ["Flutter", "Mobile", "UI/UX"], 
+    branch: "DS",
+    socials: { linkedin: "https://linkedin.com" } 
+  },
+  { 
+    id: "team-6", 
+    name: "Priyanshi Jain", 
+    position: "DESIGN DOMAIN HEAD", 
+    image: "/team/priyanshi.jpg.jpeg", 
+    bio: "Spearheading the creative design, UI/UX, and branding initiatives of the club.", 
+    skills: ["Figma", "UI/UX", "Branding"], 
+    branch: "DS",
+    socials: { linkedin: "https://linkedin.com" } 
+  },
+  { 
+    id: "team-7", 
+    name: "Disha Yadav", 
+    position: "DESIGN DOMAIN CO-HEAD", 
+    image: "/team/disha.jpg.jpeg", 
+    bio: "Assisting in the club's digital aesthetics, illustrations, and event designs.", 
+    skills: ["Illustrator", "Visual Design"], 
+    branch: "DS",
+    socials: { linkedin: "https://linkedin.com" } 
+  },
+  { 
+    id: "team-8", 
+    name: "Naman Pandey", 
+    position: "DESIGN DOMAIN CO-HEAD", 
+    image: "/team/naman.jpg.jpeg", 
+    bio: "Co-leading graphic design operations for club events and social media presence.", 
+    skills: ["Photoshop", "Graphics", "Creative"], 
+    branch: "CSE",
+    socials: { linkedin: "https://linkedin.com" } 
+  },
+  { 
+    id: "team-9", 
+    name: "Nainsi Verma", 
+    position: "CONTENT DOMAIN HEAD", 
+    image: "/team/nainsi.jpg.jpeg", 
+    bio: "Leading content creation, technical writing, and communication strategies.", 
+    skills: ["Content Strategy", "Writing", "SEO"], 
+    branch: "DS",
+    socials: { linkedin: "https://linkedin.com" } 
+  },
+  { 
+    id: "team-10", 
+    name: "Aditi Mishra", 
+    position: "PR DOMAIN HEAD", 
+    image: "/team/aditi.jpg.jpeg", 
+    bio: "Managing public relations, outreach, and external communications.", 
+    skills: ["Public Relations", "Outreach", "Communication"], 
+    branch: "AL",
+    socials: { linkedin: "https://linkedin.com" } 
+  },
+  { 
+    id: "team-11", 
+    name: "Akhand Pande", 
+    position: "AI/ML DOMAIN HEAD", 
+    image: "/team/akhand.jpg.jpeg", 
+    bio: "Guiding research and development in Artificial Intelligence and Machine Learning.", 
+    skills: ["Python", "Machine Learning", "Data Science"], 
+    branch: "AL",
+    socials: { linkedin: "https://linkedin.com" } 
+  },
+  { 
+    id: "team-12", 
+    name: "Aniket Tiwari", 
+    position: "AI/ML DOMAIN CO-HEAD", 
+    image: "/team/aniket.jpg.jpeg", 
+    bio: "Assisting in model training, deep learning projects, and AI workshops.", 
+    skills: ["Deep Learning", "TensorFlow", "Neural Nets"], 
+    branch: "DS",
+    socials: { linkedin: "https://linkedin.com" } 
+  },
+  { 
+    id: "team-13", 
+    name: "Ayushman Pan", 
+    position: "CYBER DOMAIN HEAD", 
+    image: "/team/ayushman.jpg.jpeg", 
+    bio: "Leading the cybersecurity division, focusing on ethical hacking and network security.", 
+    skills: ["Security", "Ethical Hacking", "Networks"], 
+    branch: "DS",
+    socials: { linkedin: "https://linkedin.com" } 
+  },
+  { 
+    id: "team-14", 
+    name: "Satakshi Nigan", 
+    position: "CYBER DOMAIN CO-HEAD", 
+    image: "/team/satakshi.jpg.jpeg", 
+    bio: "Assisting in managing security infrastructure and organizing CTF events.", 
+    skills: ["CTF", "Security", "Analysis"], 
+    branch: "IoT",
+    socials: { linkedin: "https://linkedin.com" } 
+  },
+  { 
+    id: "team-15", 
+    name: "Pratik Sing", 
+    position: "DSA DOMAIN HEAD", 
+    image: "/team/pratik.jpg.jpeg", 
+    bio: "Leading competitive programming sessions and data structures training.", 
+    skills: ["Algorithms", "C++", "Competitive Programming"], 
+    branch: "DS",
+    socials: { linkedin: "https://linkedin.com" } 
+  },
+  { 
+    id: "team-16", 
+    name: "Ranjeet Kumar", 
+    position: "DSA DOMAIN CO-HEAD", 
+    image: "/team/ranjeet.jpg.jpeg", 
+    bio: "Co-leading algorithm practice, problem solving, and LeetCode workshops.", 
+    skills: ["Problem Solving", "Data Structures", "Java"], 
+    branch: "AL",
+    socials: { linkedin: "https://linkedin.com" } 
+  },
+  { 
+    id: "team-17", 
+    name: "Mahi Shukla", 
+    position: "MARKETING DOMAIN HEAD", 
+    image: "/team/mahi.jpg.jpeg", 
+    bio: "Overseeing digital marketing, campaigns, and audience engagement.", 
+    skills: ["Marketing", "Campaigns", "Strategy"], 
+    branch: "DS",
+    socials: { linkedin: "https://linkedin.com" } 
+  },
+  { 
+    id: "team-18", 
+    name: "Arushi Tiwari", 
+    position: "MARKETING DOMAIN CO-HEAD", 
+    image: "/team/arushi.jpg.jpeg", 
+    bio: "Co-leading social media promotions and event marketing strategies.", 
+    skills: ["Social Media", "Promotions", "Engagement"], 
+    branch: "IT",
+    socials: { linkedin: "https://linkedin.com" } 
+  },
+  { 
+    id: "team-19", 
+    name: "Anjali Yadav", 
+    position: "SOCIAL MEDIA HEAD", 
+    image: "/team/anjali.jpg.jpeg", 
+    bio: "Managing the club's online presence across all social media platforms.", 
+    skills: ["Social Media", "Community", "Engagement"], 
+    branch: "AL",
+    socials: { linkedin: "https://linkedin.com" } 
+  },
+  { 
+    id: "team-20", 
+    name: "Aadya Srivasta", 
+    position: "MANAGEMENT HEAD", 
+    image: "/team/aadya.jpg.jpeg", 
+    bio: "Leading event logistics, team coordination, and overall operations management.", 
+    skills: ["Logistics", "Operations", "Coordination"], 
+    branch: "CSE",
+    socials: { linkedin: "https://linkedin.com" } 
+  },
+  { 
+    id: "team-21", 
+    name: "Naina misra", 
+    position: "MANAGEMENT CO-HEAD", 
+    image: "/team/naina.jpg.jpeg", 
+    bio: "Assisting in managing club resources, event planning, and execution.", 
+    skills: ["Event Planning", "Resource Management", "Execution"], 
+    branch: "CSE",
+    socials: { linkedin: "https://linkedin.com" } 
+  },
+  { 
+    id: "team-22", 
+    name: "Rajat Tripathi", 
+    position: "TECHNICAL HEAD", 
+    image: "/team/rajat.jpg.jpeg", 
+    bio: "Overseeing technical infrastructure, server deployments, and cloud operations.", 
+    skills: ["DevOps", "Cloud", "Infrastructure"], 
+    branch: "AL",
+    socials: { linkedin: "https://linkedin.com" } 
+  },
+  { 
+    id: "team-23", 
+    name: "Vashu Gupta", 
+    position: "TECHNICAL CO-HEAD", 
+    image: "/team/vashu.jpg.jpeg", 
+    bio: "Assisting in technical problem solving and maintaining project repositories.", 
+    skills: ["Git", "Backend", "Technical Support"], 
+    branch: "CSE",
+    socials: { linkedin: "https://linkedin.com" } 
+  },
+  { 
+    id: "team-24", 
+    name: "Vaishnavi Bajp", 
+    position: "SPONSORSHIP HEAD", 
+    image: "/team/vaishnavi.jpg.jpeg", 
+    bio: "Leading outreach efforts to secure sponsorships and industry partnerships.", 
+    skills: ["Sponsorship", "Negotiation", "Partnerships"], 
+    branch: "DS",
+    socials: { linkedin: "https://linkedin.com" } 
+  },
+  { 
+    id: "team-25", 
+    name: "Prashant Jaisw", 
+    position: "SPONSORSHIP CO-HEAD", 
+    image: "/team/prashant.jpg.jpeg", 
+    bio: "Assisting in pitching to potential sponsors and managing financial relations.", 
+    skills: ["Pitching", "Finance", "Relations"], 
+    branch: "AIML",
+    socials: { linkedin: "https://linkedin.com" } 
+  },
+  { 
+    id: "team-26", 
+    name: "Aditya maddesiya", 
+    position: "VIDEO EDITING HEAD", 
+    image: "/team/aditya.jpg.jpeg", 
+    bio: "Leading video production, editing, and multimedia content creation.", 
+    skills: ["Premiere Pro", "Video Editing", "Multimedia"], 
+    branch: "",
+    socials: { linkedin: "https://linkedin.com" } 
   }
 ];
 
 export const defaultLegacyHeads: LegacyHeadItem[] = [
   {
     id: "legacy-1",
-    name: "Rahul Sharma",
-    role: "President (2022-2023)",
-    tenure: "2022-2023",
-    placedAt: "Google",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400&h=400",
-    bio: "Led the chapter to 10+ major hackathons and technical symposiums. Currently a Software Development Engineer focusing on cloud infrastructure.",
-    highlight: "SDE @ Google • 10+ National Hackathons"
+    name: "Shraddha Singhdal",
+    role: "Lead (AIML)",
+    tenure: "2023-Present",
+    placedAt: "TBA",
+    image: "/team/shraddha.jpg",
+    bio: "Lead at CSI SRMCEM. Driving technical excellence in Artificial Intelligence and Machine Learning.",
+    highlight: "AIML Leadership"
   },
   {
     id: "legacy-2",
-    name: "Sneha Patel",
-    role: "Vice President (2021-2022)",
-    tenure: "2021-2022",
-    placedAt: "Microsoft",
-    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=400&h=400",
-    bio: "Pioneered UI/UX design masterclasses and frontend architecture bootcamps. Currently a Product Designer crafting global enterprise software.",
-    highlight: "Product Designer @ Microsoft • Design Sprints"
+    name: "Aastha Prakash",
+    role: "Chapter Lead",
+    tenure: "2024-2025",
+    placedAt: "Josh Technology Group",
+    image: "/team/aastha.jpg",
+    bio: "Former Chapter Lead at CSI SRMCEM. Currently working as a Software Quality Analyst at Josh Technology Group.",
+    highlight: "SQA @ Josh Technology"
   },
   {
     id: "legacy-3",
-    name: "Aman Gupta",
-    role: "President (2020-2021)",
+    name: "Hall of Fame 3",
+    role: "President",
     tenure: "2020-2021",
-    placedAt: "Amazon",
+    placedAt: "TBA",
     image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=400&h=400",
-    bio: "Steered the community through virtual hackathons and online coding initiatives. Now an AWS Cloud Solutions Architect.",
-    highlight: "Cloud Architect @ Amazon • AWS Certified"
-  },
-  {
-    id: "legacy-4",
-    name: "Priya Singh",
-    role: "President (2019-2020)",
-    tenure: "2019-2020",
-    placedAt: "Atlassian",
-    image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=400&h=400",
-    bio: "Built the foundation of our open-source and competitive programming culture. Working as a Backend Systems Engineer.",
-    highlight: "Backend Engineer @ Atlassian • Open Source"
+    bio: "Details pending...",
+    highlight: "Management"
   }
 ];
 
@@ -391,169 +703,184 @@ export const defaultNewsIssues: NewsIssueItem[] = [
 export const defaultGallery: GalleryItem[] = [
   {
     id: "gal-1",
-    image: "https://images.unsplash.com/photo-1540317580384-e5d43616b9aa?auto=format&fit=crop&q=80&w=800&h=800",
-    title: "Hackathon Decoded 2024",
-    detail: "Over 500 participants coding non-stop for 48 hours to build real-world solutions.",
+    image: "/events/ideafest.jpg.jpeg",
+    title: "IdeaFest 2024",
+    detail: "A competitive hackathon with cash prizes and intense coding sessions.",
     size: "large"
   },
   {
     id: "gal-2",
-    image: "https://images.unsplash.com/photo-1515187029135-18ee286d815b?auto=format&fit=crop&q=80&w=600&h=400",
-    title: "AI & ML Bootcamp",
-    detail: "Students training their first neural networks in our hands-on AI session.",
+    image: "/events/bytebattle.jpg.jpeg",
+    title: "Byte Battle",
+    detail: "Multi-language coding battle featuring top programmers.",
     size: "small"
   },
   {
     id: "gal-3",
-    image: "https://images.unsplash.com/photo-1475721025505-c31da1687109?auto=format&fit=crop&q=80&w=600&h=400",
-    title: "Web3 Summit",
-    detail: "Industry experts explaining the future of decentralized internet.",
+    image: "/events/nationalyouthday.jpg.jpeg",
+    title: "National Youth Day",
+    detail: "Tech talk on Smart India Hackathon and Innovation.",
     size: "small"
   },
   {
     id: "gal-4",
-    image: "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?auto=format&fit=crop&q=80&w=800&h=400",
-    title: "Techkriti 2023",
-    detail: "The massive crowd gathered for our flagship annual technical festival.",
+    image: "/events/cupidcoding.jpg.jpeg",
+    title: "Cupid Coding Contest",
+    detail: "\"Commit to Code, NOT Chaos\" - Our signature Valentine-themed DSA contest.",
     size: "wide"
   },
   {
     id: "gal-5",
-    image: "https://images.unsplash.com/photo-1528605248644-14dd04022da1?auto=format&fit=crop&q=80&w=600&h=400",
-    title: "UI/UX Workshop",
-    detail: "Design team explaining the core principles of user-centric design using Figma.",
+    image: "/events/techtalk.jpg.jpeg",
+    title: "AI Tech Talk",
+    detail: "Deep dive into the world of Artificial Intelligence by Arjit Verma.",
     size: "small"
   },
   {
     id: "gal-6",
-    image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=600&h=800",
-    title: "Open Source Drive",
-    detail: "Collaborative coding session where we merged 500+ pull requests.",
+    image: "/events/codeshalla.jpg.jpeg",
+    title: "Codeshalla Bootcamp",
+    detail: "Interactive 7-day C++ programming bootcamp over Discord.",
     size: "tall"
   }
 ];
 
 export const defaultStats: ClubStats = {
   eventsHosted: "50+",
-  activeMembers: "1k+",
-  liveProjects: "10+",
+  activeMembers: "1000+",
+  liveProjects: "50+",
   placementRate: "100%"
 };
 
 // ============================================================================
-// STORAGE HELPERS (LOCALSTORAGE SYNC)
+// STORAGE HELPERS (SUPABASE)
 // ============================================================================
 
-const STORAGE_KEYS = {
-  EVENTS: "csi_cms_events_v2",
-  TEAM: "csi_cms_team_v2",
-  LEGACY: "csi_cms_legacy_v2",
-  SUBTEAMS: "csi_cms_subteams_v2",
-  COREVALUES: "csi_cms_corevalues_v2",
-  NEWS: "csi_cms_news_v2",
-  GALLERY: "csi_cms_gallery_v2",
-  STATS: "csi_cms_stats_v2",
-  PASSWORD: "csi_cms_admin_pwd",
-};
-
-// Helper: Safely get data from localStorage or fallback
-function getItem<T>(key: string, fallback: T): T {
-  if (typeof window === "undefined") return fallback;
+// Helper: Fetch from Supabase with fallback
+async function fetchFromSupabase<T>(table: string, fallback: T[]): Promise<T[]> {
   try {
-    const item = localStorage.getItem(key);
-    return item ? JSON.parse(item) : fallback;
+    const { data, error } = await supabase.from(table).select('*');
+    if (error) throw error;
+    if (!data || data.length === 0) return fallback;
+    return data as T[];
   } catch (error) {
-    console.error(`Error reading ${key} from storage:`, error);
+    console.error(`Error fetching from ${table}:`, error);
     return fallback;
   }
 }
 
-// Helper: Safely set data to localStorage & notify
-function setItem<T>(key: string, value: T): void {
-  if (typeof window === "undefined") return;
+// Helper: Save to Supabase
+async function saveToSupabase<T extends { id: string }>(table: string, items: T[]): Promise<void> {
   try {
-    localStorage.setItem(key, JSON.stringify(value));
-    window.dispatchEvent(new Event("csi_data_updated"));
+    // Delete existing rows to ensure clean upsert (if deleting is needed), 
+    // but upsert should overwrite by ID. We use upsert.
+    const { error } = await supabase.from(table).upsert(items);
+    if (error) throw error;
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("csi_data_updated"));
+    }
   } catch (error) {
-    console.error(`Error saving ${key} to storage:`, error);
+    console.error(`Error saving to ${table}:`, error);
   }
 }
 
 // Public CMS Getters & Setters
 export const DataStore = {
   // Events
-  getEvents: (): EventItem[] => getItem(STORAGE_KEYS.EVENTS, defaultEvents),
-  saveEvents: (data: EventItem[]) => setItem(STORAGE_KEYS.EVENTS, data),
+  getEvents: async (): Promise<EventItem[]> => await fetchFromSupabase('events', defaultEvents),
+  saveEvents: async (data: EventItem[]) => await saveToSupabase('events', data),
 
   // Team
-  getTeam: (): TeamMemberItem[] => getItem(STORAGE_KEYS.TEAM, defaultTeam),
-  saveTeam: (data: TeamMemberItem[]) => setItem(STORAGE_KEYS.TEAM, data),
+  getTeam: async (): Promise<TeamMemberItem[]> => await fetchFromSupabase('team', defaultTeam),
+  saveTeam: async (data: TeamMemberItem[]) => await saveToSupabase('team', data),
 
   // Legacy Heads
-  getLegacyHeads: (): LegacyHeadItem[] => getItem(STORAGE_KEYS.LEGACY, defaultLegacyHeads),
-  saveLegacyHeads: (data: LegacyHeadItem[]) => setItem(STORAGE_KEYS.LEGACY, data),
+  getLegacyHeads: async (): Promise<LegacyHeadItem[]> => await fetchFromSupabase('legacy_heads', defaultLegacyHeads),
+  saveLegacyHeads: async (data: LegacyHeadItem[]) => await saveToSupabase('legacy_heads', data),
 
   // Sub-Teams
-  getSubTeams: (): SubTeamItem[] => getItem(STORAGE_KEYS.SUBTEAMS, defaultSubTeams),
-  saveSubTeams: (data: SubTeamItem[]) => setItem(STORAGE_KEYS.SUBTEAMS, data),
+  getSubTeams: async (): Promise<SubTeamItem[]> => await fetchFromSupabase('sub_teams', defaultSubTeams),
+  saveSubTeams: async (data: SubTeamItem[]) => await saveToSupabase('sub_teams', data),
 
   // Core Values
-  getCoreValues: (): CoreValueItem[] => getItem(STORAGE_KEYS.COREVALUES, defaultCoreValues),
-  saveCoreValues: (data: CoreValueItem[]) => setItem(STORAGE_KEYS.COREVALUES, data),
+  getCoreValues: async (): Promise<CoreValueItem[]> => await fetchFromSupabase('core_values', defaultCoreValues),
+  saveCoreValues: async (data: CoreValueItem[]) => await saveToSupabase('core_values', data),
 
   // News Issues
-  getNewsIssues: (): NewsIssueItem[] => {
-    const issues = getItem(STORAGE_KEYS.NEWS, defaultNewsIssues);
+  getNewsIssues: async (): Promise<NewsIssueItem[]> => {
+    const issues = await fetchFromSupabase<NewsIssueItem>('news_issues', defaultNewsIssues);
     return issues.map(item => ({
       ...item,
       pdfUrl: item.pdfUrl && item.pdfUrl.includes("w3.org") ? "/documents/csi-gazette-october-2024.pdf" : item.pdfUrl
     }));
   },
-  saveNewsIssues: (data: NewsIssueItem[]) => setItem(STORAGE_KEYS.NEWS, data),
+  saveNewsIssues: async (data: NewsIssueItem[]) => await saveToSupabase('news_issues', data),
 
   // Gallery
-  getGallery: (): GalleryItem[] => getItem(STORAGE_KEYS.GALLERY, defaultGallery),
-  saveGallery: (data: GalleryItem[]) => setItem(STORAGE_KEYS.GALLERY, data),
+  getGallery: async (): Promise<GalleryItem[]> => await fetchFromSupabase('gallery', defaultGallery),
+  saveGallery: async (data: GalleryItem[]) => await saveToSupabase('gallery', data),
 
   // Stats
-  getStats: (): ClubStats => getItem(STORAGE_KEYS.STATS, defaultStats),
-  saveStats: (data: ClubStats) => setItem(STORAGE_KEYS.STATS, data),
+  getStats: async (): Promise<ClubStats> => {
+    try {
+      const { data, error } = await supabase.from('stats').select('*').eq('id', 'main').single();
+      if (error) {
+        if (error.code === 'PGRST116') return defaultStats; // Not found
+        throw error;
+      }
+      return data as ClubStats;
+    } catch (error) {
+      console.error(`Error fetching stats:`, error);
+      return defaultStats;
+    }
+  },
+  saveStats: async (data: ClubStats) => {
+    try {
+      const { error } = await supabase.from('stats').upsert({ id: 'main', ...data });
+      if (error) throw error;
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("csi_data_updated"));
+      }
+    } catch (error) {
+      console.error(`Error saving stats:`, error);
+    }
+  },
 
   // Admin Password
   getAdminPassword: (): string => {
     if (typeof window === "undefined") return "admin123";
-    return localStorage.getItem(STORAGE_KEYS.PASSWORD) || "admin123";
+    return localStorage.getItem("csi_cms_admin_pwd") || "admin123";
   },
   saveAdminPassword: (pwd: string) => {
     if (typeof window === "undefined") return;
-    localStorage.setItem(STORAGE_KEYS.PASSWORD, pwd);
+    localStorage.setItem("csi_cms_admin_pwd", pwd);
   },
 
   // Export Complete Backup JSON
-  exportBackup: (): WebsiteDataBackup => ({
-    version: "2.0",
+  exportBackup: async (): Promise<WebsiteDataBackup> => ({
+    version: "3.0 (Supabase)",
     exportedAt: new Date().toISOString(),
-    events: DataStore.getEvents(),
-    team: DataStore.getTeam(),
-    legacyHeads: DataStore.getLegacyHeads(),
-    subTeams: DataStore.getSubTeams(),
-    coreValues: DataStore.getCoreValues(),
-    newsIssues: DataStore.getNewsIssues(),
-    gallery: DataStore.getGallery(),
-    stats: DataStore.getStats(),
+    events: await DataStore.getEvents(),
+    team: await DataStore.getTeam(),
+    legacyHeads: await DataStore.getLegacyHeads(),
+    subTeams: await DataStore.getSubTeams(),
+    coreValues: await DataStore.getCoreValues(),
+    newsIssues: await DataStore.getNewsIssues(),
+    gallery: await DataStore.getGallery(),
+    stats: await DataStore.getStats(),
   }),
 
   // Import Complete Backup JSON
-  importBackup: (backup: Partial<WebsiteDataBackup>): boolean => {
+  importBackup: async (backup: Partial<WebsiteDataBackup>): Promise<boolean> => {
     try {
-      if (backup.events) DataStore.saveEvents(backup.events);
-      if (backup.team) DataStore.saveTeam(backup.team);
-      if (backup.legacyHeads) DataStore.saveLegacyHeads(backup.legacyHeads);
-      if (backup.subTeams) DataStore.saveSubTeams(backup.subTeams);
-      if (backup.coreValues) DataStore.saveCoreValues(backup.coreValues);
-      if (backup.newsIssues) DataStore.saveNewsIssues(backup.newsIssues);
-      if (backup.gallery) DataStore.saveGallery(backup.gallery);
-      if (backup.stats) DataStore.saveStats(backup.stats);
+      if (backup.events) await DataStore.saveEvents(backup.events);
+      if (backup.team) await DataStore.saveTeam(backup.team);
+      if (backup.legacyHeads) await DataStore.saveLegacyHeads(backup.legacyHeads);
+      if (backup.subTeams) await DataStore.saveSubTeams(backup.subTeams);
+      if (backup.coreValues) await DataStore.saveCoreValues(backup.coreValues);
+      if (backup.newsIssues) await DataStore.saveNewsIssues(backup.newsIssues);
+      if (backup.gallery) await DataStore.saveGallery(backup.gallery);
+      if (backup.stats) await DataStore.saveStats(backup.stats);
       return true;
     } catch (e) {
       console.error("Failed to import backup", e);
@@ -562,14 +889,14 @@ export const DataStore = {
   },
 
   // Reset Everything to Official Defaults
-  resetToDefaults: () => {
-    DataStore.saveEvents(defaultEvents);
-    DataStore.saveTeam(defaultTeam);
-    DataStore.saveLegacyHeads(defaultLegacyHeads);
-    DataStore.saveSubTeams(defaultSubTeams);
-    DataStore.saveCoreValues(defaultCoreValues);
-    DataStore.saveNewsIssues(defaultNewsIssues);
-    DataStore.saveGallery(defaultGallery);
-    DataStore.saveStats(defaultStats);
+  resetToDefaults: async () => {
+    await DataStore.saveEvents(defaultEvents);
+    await DataStore.saveTeam(defaultTeam);
+    await DataStore.saveLegacyHeads(defaultLegacyHeads);
+    await DataStore.saveSubTeams(defaultSubTeams);
+    await DataStore.saveCoreValues(defaultCoreValues);
+    await DataStore.saveNewsIssues(defaultNewsIssues);
+    await DataStore.saveGallery(defaultGallery);
+    await DataStore.saveStats(defaultStats);
   }
 };

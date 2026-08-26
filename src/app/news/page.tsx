@@ -22,8 +22,8 @@ export default function NewsPage() {
   const handleZoomOut = () => setZoom(prev => Math.max(prev - 15, 60));
   const handleResetZoom = () => setZoom(100);
 
-  const loadData = () => {
-    setIssues(DataStore.getNewsIssues());
+  const loadData = async () => {
+    setIssues(await DataStore.getNewsIssues());
   };
 
   useEffect(() => {
@@ -65,8 +65,8 @@ export default function NewsPage() {
   return (
     <div className="min-h-screen relative overflow-hidden pb-32">
       {/* Ambient Background Glows */}
-      <div className={cn("absolute top-0 left-0 w-full h-[500px] blur-[160px] pointer-events-none -z-10", config.glowClass1)} />
-      <div className={cn("absolute top-1/3 right-0 w-[500px] h-[500px] blur-[150px] pointer-events-none -z-10", config.glowClass2)} />
+      <div className={cn("absolute top-0 left-0 w-full h-[500px] blur-[80px] md:blur-[160px] opacity-60 md:opacity-100 pointer-events-none -z-10", config.glowClass1)} />
+      <div className={cn("absolute top-1/3 right-0 w-[500px] h-[500px] blur-[80px] md:blur-[150px] opacity-60 md:opacity-100 pointer-events-none -z-10", config.glowClass2)} />
 
       {/* 1. Hero Header */}
       <section className="pt-32 px-4 md:px-16 lg:px-24 max-w-7xl mx-auto text-center mb-16">
@@ -338,8 +338,8 @@ export default function NewsPage() {
           className="relative rounded-3xl bg-slate-900/80 border border-slate-800 backdrop-blur-2xl shadow-2xl p-8 md:p-12 lg:p-14 overflow-hidden group hover:border-sky-500/40 transition-all"
         >
           {/* Ambient Glows Inside Card */}
-          <div className="absolute top-0 left-0 w-96 h-96 bg-sky-500/15 rounded-full blur-[100px] pointer-events-none -z-10" />
-          <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-600/20 rounded-full blur-[100px] pointer-events-none -z-10" />
+          <div className="absolute top-0 left-0 w-96 h-96 bg-sky-500/15 rounded-full blur-[60px] md:blur-[100px] opacity-60 md:opacity-100 pointer-events-none -z-10" />
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-600/20 rounded-full blur-[60px] md:blur-[100px] opacity-60 md:opacity-100 pointer-events-none -z-10" />
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
             
@@ -467,3 +467,4 @@ export default function NewsPage() {
     </div>
   );
 }
+

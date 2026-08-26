@@ -11,8 +11,8 @@ export default function GalleryPage() {
   const [galleryData, setGalleryData] = useState<GalleryItem[]>([]);
   const { config } = useTheme();
 
-  const loadData = () => {
-    setGalleryData(DataStore.getGallery());
+  const loadData = async () => {
+    setGalleryData(await DataStore.getGallery());
   };
 
   useEffect(() => {
@@ -38,8 +38,8 @@ export default function GalleryPage() {
   return (
     <div className="relative min-h-screen overflow-hidden pb-32">
       {/* Ambient Backgrounds */}
-      <div className={cn("absolute top-0 left-0 w-full h-[500px] blur-[150px] pointer-events-none -z-10", config.glowClass1)} />
-      <div className={cn("absolute top-1/3 right-0 w-[500px] h-[500px] blur-[150px] pointer-events-none -z-10", config.glowClass2)} />
+      <div className={cn("absolute top-0 left-0 w-full h-[500px] blur-[80px] md:blur-[150px] opacity-60 md:opacity-100 pointer-events-none -z-10", config.glowClass1)} />
+      <div className={cn("absolute top-1/3 right-0 w-[500px] h-[500px] blur-[80px] md:blur-[150px] opacity-60 md:opacity-100 pointer-events-none -z-10", config.glowClass2)} />
 
       {/* Hero Section */}
       <section className="pt-32 px-4 md:px-16 lg:px-24 max-w-7xl mx-auto text-center mb-16">
@@ -70,7 +70,7 @@ export default function GalleryPage() {
           animate="show"
           className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 auto-rows-[260px]"
         >
-          {galleryData.map((item) => {
+          {[...galleryData].reverse().map((item) => {
             // Layout spans for masonry / bento
             let spanClass = "col-span-1 row-span-1";
             if (item.size === "large") spanClass = "col-span-1 sm:col-span-2 md:col-span-2 row-span-1 sm:row-span-2";
@@ -90,15 +90,7 @@ export default function GalleryPage() {
                   className="w-full h-full object-cover group-hover:scale-110 group-hover:blur-[2px] transition-all duration-700 opacity-80 group-hover:opacity-30"
                 />
 
-                {/* Default Gradient Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent group-hover:opacity-0 transition-opacity duration-500" />
 
-                {/* Default Bottom-Left Title (Visible when not hovered) */}
-                <div className="absolute bottom-6 left-6 right-6 group-hover:opacity-0 transition-opacity duration-300 z-10">
-                  <h3 className="text-xl font-bold text-white drop-shadow-md tracking-tight">
-                    {item.title}
-                  </h3>
-                </div>
 
                 {/* Restored Original Hover Details Overlay (Glassmorphism Slide-Up) */}
                 <div className="absolute inset-0 p-6 sm:p-8 flex flex-col justify-center items-center text-center bg-gradient-to-br from-purple-950/85 via-slate-900/90 to-indigo-950/85 backdrop-blur-md opacity-0 group-hover:opacity-100 translate-y-6 group-hover:translate-y-0 transition-all duration-500 z-20">
@@ -137,3 +129,4 @@ export default function GalleryPage() {
     </div>
   );
 }
+

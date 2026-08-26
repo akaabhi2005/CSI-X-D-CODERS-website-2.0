@@ -15,8 +15,8 @@ export default function Home() {
   const { config } = useTheme();
   const [stats, setStats] = useState<ClubStats>({
     eventsHosted: "50+",
-    activeMembers: "1k+",
-    liveProjects: "10+",
+    activeMembers: "1000+",
+    liveProjects: "50+",
     placementRate: "100%"
   });
   const [featuredEvent, setFeaturedEvent] = useState<EventItem | null>(null);
@@ -26,9 +26,9 @@ export default function Home() {
     setFlippedCards(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const loadData = () => {
-    setStats(DataStore.getStats());
-    const events = DataStore.getEvents();
+  const loadData = async () => {
+    setStats(await DataStore.getStats());
+    const events = await DataStore.getEvents();
     const upcoming = events.find(e => e.category === "upcoming") || events[0] || null;
     setFeaturedEvent(upcoming);
   };
@@ -42,8 +42,8 @@ export default function Home() {
   return (
     <div className="relative overflow-x-clip transition-colors duration-300">
       {/* Background ambient glows */}
-      <div className={cn("absolute top-1/4 left-0 w-[500px] h-[500px] rounded-full blur-[150px] pointer-events-none transition-colors duration-500", config.glowClass1)} />
-      <div className={cn("absolute top-1/4 right-0 w-[500px] h-[500px] rounded-full blur-[150px] pointer-events-none transition-colors duration-500", config.glowClass2)} />
+      <div className={cn("absolute top-1/4 left-0 w-[500px] h-[500px] rounded-full blur-[80px] md:blur-[150px] opacity-60 md:opacity-100 pointer-events-none transition-colors duration-500", config.glowClass1)} />
+      <div className={cn("absolute top-1/4 right-0 w-[500px] h-[500px] rounded-full blur-[80px] md:blur-[150px] opacity-60 md:opacity-100 pointer-events-none transition-colors duration-500", config.glowClass2)} />
 
       {/* ========================================================================= */}
       {/* 1. HERO SECTION */}
@@ -288,7 +288,7 @@ export default function Home() {
       {/* 4. WHY JOIN CSI_SRMCEM X D'CODERS & UNMATCHED PLACEMENT SUCCESS */}
       {/* ========================================================================= */}
       <section className="py-24 px-4 md:px-16 lg:px-24 relative overflow-hidden border-t border-slate-800/80">
-        <div className={cn("absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl h-[400px] blur-[140px] pointer-events-none -z-10", config.glowClass1)} />
+        <div className={cn("absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl h-[400px] blur-[80px] md:blur-[140px] opacity-60 md:opacity-100 pointer-events-none -z-10", config.glowClass1)} />
         
         <div className="max-w-7xl mx-auto">
           {/* Section Header */}
@@ -459,3 +459,4 @@ export default function Home() {
     </div>
   );
 }
+

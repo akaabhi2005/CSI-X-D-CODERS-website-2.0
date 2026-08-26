@@ -6,55 +6,9 @@ import { FaLinkedin, FaGithub, FaInstagram } from "react-icons/fa";
 import { Sparkles } from "lucide-react";
 import { useTheme } from "@/lib/themeContext";
 import { cn } from "@/lib/utils";
+import { DataStore, TeamMemberItem } from "@/lib/dataStore";
 
-const defaultTeam = [
-  // L1
-  { id: "OP-01", name: "Abhay Shanker Tiwari", position: "President", image: "https://images.unsplash.com/photo-1556157382-97eda2d62296?auto=format&fit=crop&q=80&w=400", bio: "Visionary leader driving the club's mission to foster technological excellence and innovation.", skills: ["Leadership", "Vision", "Strategy"], socials: { linkedin: "#", github: "#" }, level: 1 },
-  // L2
-  { id: "OP-02", name: "Vineet Pandey", position: "Vice President & PR Head", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400", bio: "Directing operations, business strategy, and public relations.", skills: ["Operations", "Strategy", "Marketing"], socials: { linkedin: "#", github: "#" }, level: 2 },
-  // L3 (Heads)
-  { id: "OP-04", name: "Abhishek Soni", position: "Technical Head", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=400", bio: "Leading the technical initiatives and core engineering projects.", skills: ["Engineering", "Architecture", "Leadership"], socials: { github: "#", linkedin: "#" }, level: 3 },
-  { id: "OP-03", name: "Asmi Tiwari", position: "Content Head", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=400", bio: "Leading content strategy and creation for all club publications.", skills: ["Content", "Strategy", "Writing"], socials: { linkedin: "#", github: "#" }, level: 3 },
-  { id: "OP-06", name: "Jatin Pandey", position: "Designing Head", image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=400", bio: "Directing UI/UX design and overall visual aesthetic of the club.", skills: ["UI/UX", "Figma", "Design"], socials: { linkedin: "#", github: "#" }, level: 3 },
-  { id: "OP-09", name: "Akshat Saxena", position: "Photography Head", image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=400", bio: "Capturing moments and managing our digital presence.", socials: { instagram: "#", linkedin: "#", github: "#" }, skills: ["Photography", "Social Media", "Video"], level: 3 },
-  // L4 (Co-Heads)
-  { id: "OP-05", name: "Abhinav Singh", position: "Technical Co-head", image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=400", bio: "Assisting in technical operations and mentoring junior developers.", skills: ["Development", "Mentorship", "Cloud"], socials: { github: "#", linkedin: "#" }, level: 4 },
-  { id: "OP-07", name: "Isha Gupta", position: "Designing Co-head", image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=400", bio: "Collaborating on design systems and creative marketing assets.", skills: ["Creative", "Illustration", "UI"], socials: { linkedin: "#", github: "#" }, level: 4 },
-  { id: "OP-08", name: "Ayush Pratap Singh", position: "PR & Marketing Co-head", image: "https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?auto=format&fit=crop&q=80&w=400", bio: "Executing marketing campaigns and managing public outreach.", skills: ["Marketing", "Outreach", "Strategy"], socials: { linkedin: "#", github: "#" }, level: 4 },
-
-  // L5 (Members)
-  // Technical Team
-  { id: "M-T1", name: "Naina Mishra", position: "Technical Member", domain: "technical", image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&q=80&w=400", bio: "Tech enthusiast focusing on modern web development and algorithms.", skills: ["Coding", "Web Dev"], branch: "CSE", socials: { linkedin: "#" }, level: 5 },
-  { id: "M-T2", name: "Vaishnavi Bajpai", position: "Technical Member", domain: "technical", image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&q=80&w=400", bio: "Tech enthusiast focusing on modern web development and algorithms.", skills: ["Coding", "Web Dev"], branch: "CSE", socials: { linkedin: "#" }, level: 5 },
-  { id: "M-T3", name: "Aniket Tiwari", position: "Technical Member", domain: "technical", image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&q=80&w=400", bio: "Tech enthusiast focusing on modern web development and algorithms.", skills: ["Coding", "Web Dev"], branch: "CSE", socials: { linkedin: "#" }, level: 5 },
-  { id: "M-T4", name: "Shriyansh Verma", position: "Technical Member", domain: "technical", image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&q=80&w=400", bio: "Tech enthusiast focusing on modern web development and algorithms.", skills: ["Coding", "Web Dev"], branch: "CSE", socials: { linkedin: "#" }, level: 5 },
-  { id: "M-T5", name: "Prashant Jaisawal", position: "Technical Member", domain: "technical", image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&q=80&w=400", bio: "Tech enthusiast focusing on modern web development and algorithms.", skills: ["Coding", "Web Dev"], branch: "CSE", socials: { linkedin: "#" }, level: 5 },
-  { id: "M-T6", name: "Aditya Maddheshiya", position: "Technical Member", domain: "technical", image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&q=80&w=400", bio: "Tech enthusiast focusing on modern web development and algorithms.", skills: ["Coding", "Web Dev"], branch: "CSE", socials: { linkedin: "#" }, level: 5 },
-  { id: "M-T7", name: "Vashu", position: "Technical Member", domain: "technical", image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&q=80&w=400", bio: "Tech enthusiast focusing on modern web development and algorithms.", skills: ["Coding", "Web Dev"], branch: "CSE", socials: { linkedin: "#" }, level: 5 },
-  
-  // Content Team
-  { id: "M-C1", name: "Mugdh Tripathi", position: "Content Member", domain: "content", image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&q=80&w=400", bio: "Creative writer dedicated to crafting engaging technical content and blogs.", skills: ["Writing", "Editing"], branch: "CSE", socials: { linkedin: "#" }, level: 5 },
-  { id: "M-C2", name: "Ayushman", position: "Content Member", domain: "content", image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&q=80&w=400", bio: "Creative writer dedicated to crafting engaging technical content and blogs.", skills: ["Writing", "Editing"], branch: "CSE", socials: { linkedin: "#" }, level: 5 },
-  { id: "M-C3", name: "Sakshi", position: "Content Member", domain: "content", image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&q=80&w=400", bio: "Creative writer dedicated to crafting engaging technical content and blogs.", skills: ["Writing", "Editing"], branch: "CSE", socials: { linkedin: "#" }, level: 5 },
-  { id: "M-C4", name: "Supriya Singh", position: "Content Member", domain: "content", image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&q=80&w=400", bio: "Creative writer dedicated to crafting engaging technical content and blogs.", skills: ["Writing", "Editing"], branch: "CSE", socials: { linkedin: "#" }, level: 5 },
-  { id: "M-C5", name: "Priya Keshari", position: "Content Member", domain: "content", image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&q=80&w=400", bio: "Creative writer dedicated to crafting engaging technical content and blogs.", skills: ["Writing", "Editing"], branch: "CSE", socials: { linkedin: "#" }, level: 5 },
-
-  // Photography & Social Media
-  { id: "M-P1", name: "Ayan", position: "Photography Member", domain: "photo", image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&q=80&w=400", bio: "Capturing the club's best moments and managing our social footprint.", skills: ["Photography", "Socials"], branch: "CSE", socials: { linkedin: "#" }, level: 5 },
-  { id: "M-P2", name: "Pratik Singh", position: "Photography Member", domain: "photo", image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&q=80&w=400", bio: "Capturing the club's best moments and managing our social footprint.", skills: ["Photography", "Socials"], branch: "CSE", socials: { linkedin: "#" }, level: 5 },
-  { id: "M-P3", name: "Rajneet Kumar", position: "Photography Member", domain: "photo", image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&q=80&w=400", bio: "Capturing the club's best moments and managing our social footprint.", skills: ["Photography", "Socials"], branch: "CSE", socials: { linkedin: "#" }, level: 5 },
-
-  // Design Team
-  { id: "M-D1", name: "Design Member 1", position: "Designing Member", domain: "design", image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&q=80&w=400", bio: "Creating stunning visual assets and intuitive user interfaces.", skills: ["UI/UX", "Figma"], branch: "CSE", socials: { linkedin: "#" }, level: 5 },
-  { id: "M-D2", name: "Design Member 2", position: "Designing Member", domain: "design", image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&q=80&w=400", bio: "Creating stunning visual assets and intuitive user interfaces.", skills: ["UI/UX", "Figma"], branch: "CSE", socials: { linkedin: "#" }, level: 5 },
-  { id: "M-D3", name: "Design Member 3", position: "Designing Member", domain: "design", image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&q=80&w=400", bio: "Creating stunning visual assets and intuitive user interfaces.", skills: ["UI/UX", "Figma"], branch: "CSE", socials: { linkedin: "#" }, level: 5 },
-  { id: "M-D4", name: "Design Member 4", position: "Designing Member", domain: "design", image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&q=80&w=400", bio: "Creating stunning visual assets and intuitive user interfaces.", skills: ["UI/UX", "Figma"], branch: "CSE", socials: { linkedin: "#" }, level: 5 },
-
-  // PR & Marketing
-  { id: "M-PR1", name: "Mahi Shukla", position: "PR Member", domain: "pr", image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&q=80&w=400", bio: "Driving outreach, engagement, and managing club relationships.", skills: ["Marketing", "PR"], branch: "CSE", socials: { linkedin: "#" }, level: 5 },
-  { id: "M-PR2", name: "Anjali Yadav", position: "PR Member", domain: "pr", image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&q=80&w=400", bio: "Driving outreach, engagement, and managing club relationships.", skills: ["Marketing", "PR"], branch: "CSE", socials: { linkedin: "#" }, level: 5 },
-  { id: "M-PR3", name: "Arushi Tiwari", position: "PR Member", domain: "pr", image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&q=80&w=400", bio: "Driving outreach, engagement, and managing club relationships.", skills: ["Marketing", "PR"], branch: "CSE", socials: { linkedin: "#" }, level: 5 },
-];
+// Removed hardcoded defaultTeam array
 
 type OpenDirection = "left" | "right" | "bottom";
 
@@ -122,16 +76,16 @@ const NetworkNode = ({ member, direction, isFaded, setHoveredId, size = "lg" }: 
   let cardInitial = {};
   
   if (isRight) {
-    wrapperPosClass = "left-[calc(100%-20px)] top-1/2 -translate-y-1/2";
-    flexClass = "flex-row";
+    wrapperPosClass = "md:left-[calc(100%-20px)] md:top-1/2 md:-translate-y-1/2";
+    flexClass = "md:flex-row";
     cardInitial = { x: -20 };
   } else if (isLeft) {
-    wrapperPosClass = "right-[calc(100%-20px)] top-1/2 -translate-y-1/2";
-    flexClass = "flex-row-reverse";
+    wrapperPosClass = "md:right-[calc(100%-20px)] md:top-1/2 md:-translate-y-1/2";
+    flexClass = "md:flex-row-reverse";
     cardInitial = { x: 20 };
   } else if (isBottom) {
-    wrapperPosClass = "top-[calc(100%-10px)] left-1/2 -translate-x-1/2";
-    flexClass = "flex-col";
+    wrapperPosClass = "md:top-[calc(100%-10px)] md:left-1/2 md:-translate-x-1/2";
+    flexClass = "md:flex-col";
     cardInitial = { y: -20 };
   }
 
@@ -151,7 +105,7 @@ const NetworkNode = ({ member, direction, isFaded, setHoveredId, size = "lg" }: 
         
         {/* Profile Circle */}
         <motion.div 
-          className={`${size === 'lg' ? 'w-28 h-28 md:w-32 md:h-32' : 'w-16 h-16 md:w-20 md:h-20'} rounded-full border-[3px] bg-slate-950/90 overflow-hidden relative z-30`}
+          className={`${size === 'lg' ? 'w-32 h-32 md:w-40 md:h-40' : 'w-20 h-20 md:w-24 md:h-24'} rounded-full border-[3px] bg-slate-950/90 overflow-hidden relative z-30`}
           style={{ 
             boxShadow: `0 0 20px ${config.primaryAccent}40`,
             borderColor: isOpen ? config.primaryAccent : `${config.primaryAccent}60`
@@ -182,15 +136,15 @@ const NetworkNode = ({ member, direction, isFaded, setHoveredId, size = "lg" }: 
         <AnimatePresence>
           {isOpen && (
             <div 
-              className={`absolute pointer-events-none flex items-center justify-center z-50 ${wrapperPosClass}`}
+              className={`fixed inset-x-4 top-[20%] md:absolute md:inset-auto pointer-events-none flex items-center justify-center z-[100] ${wrapperPosClass}`}
               onMouseEnter={handleMouseEnter} 
             >
-              <div className={`flex items-center justify-center ${flexClass}`}>
+              <div className={`flex flex-col items-center justify-center ${flexClass}`}>
                 
                 {/* Connecting Dot */}
                 <motion.div 
                   initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}
-                  className="w-3 h-3 rounded-full shrink-0" 
+                  className="hidden md:block w-3 h-3 rounded-full shrink-0" 
                   style={{ 
                     backgroundColor: config.primaryAccent, 
                     boxShadow: `0 0 15px ${config.primaryAccent}` 
@@ -203,7 +157,7 @@ const NetworkNode = ({ member, direction, isFaded, setHoveredId, size = "lg" }: 
                   animate={isBottom ? { height: 80, opacity: 1 } : { width: lineWidth, opacity: 1 }}
                   exit={isBottom ? { height: 0, opacity: 0 } : { width: 0, opacity: 0 }}
                   transition={{ duration: 0.3, ease: "easeOut" }}
-                  className={`shrink-0 flex items-center justify-center overflow-hidden ${isBottom ? 'w-[2px] my-2' : 'mx-2'}`}
+                  className={`hidden md:flex shrink-0 items-center justify-center overflow-hidden ${isBottom ? 'w-[2px] my-2' : 'mx-2'}`}
                   style={isBottom ? {
                     background: `linear-gradient(to bottom, ${config.primaryAccent}, ${config.secondaryAccent})`,
                     boxShadow: `0 0 8px ${config.primaryAccent}80`
@@ -240,7 +194,7 @@ const NetworkNode = ({ member, direction, isFaded, setHoveredId, size = "lg" }: 
                   animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
-                  className="w-[300px] bg-slate-950/95 backdrop-blur-2xl border rounded-2xl p-6 pointer-events-auto shadow-2xl"
+                  className="w-full max-w-[340px] md:w-[300px] md:max-w-none bg-slate-950/95 backdrop-blur-lg md:backdrop-blur-2xl border rounded-2xl p-6 pointer-events-auto shadow-2xl mx-auto"
                   style={{ 
                     borderColor: `${config.primaryAccent}60`,
                     boxShadow: `0 20px 60px -10px ${config.primaryAccent}35`
@@ -386,7 +340,15 @@ export default function TeamPage() {
 
   useEffect(() => {
     setIsMounted(true);
-    setTeamData(defaultTeam);
+    
+    const loadTeam = async () => {
+      const data = await DataStore.getTeam();
+      setTeamData(data);
+    };
+
+    loadTeam();
+    window.addEventListener("csi_data_updated", loadTeam);
+    return () => window.removeEventListener("csi_data_updated", loadTeam);
   }, []);
 
   if (!isMounted) return null;
@@ -406,11 +368,11 @@ export default function TeamPage() {
   return (
     <div className="relative min-h-screen overflow-x-hidden pb-32">
       {/* Ambient Background Glows */}
-      <div className={cn("absolute top-0 left-0 w-full h-[500px] blur-[150px] pointer-events-none -z-10", config.glowClass1)} />
-      <div className={cn("absolute top-1/3 right-0 w-[500px] h-[500px] blur-[150px] pointer-events-none -z-10", config.glowClass2)} />
+      <div className={cn("absolute top-0 left-0 w-full h-[500px] blur-[80px] md:blur-[150px] opacity-60 md:opacity-100 pointer-events-none -z-10", config.glowClass1)} />
+      <div className={cn("absolute top-1/3 right-0 w-[500px] h-[500px] blur-[80px] md:blur-[150px] opacity-60 md:opacity-100 pointer-events-none -z-10", config.glowClass2)} />
 
       {/* Hero Section */}
-      <section className="pt-32 px-4 md:px-16 lg:px-24 max-w-7xl mx-auto text-center mb-16 relative z-10">
+      <section className="pt-20 px-4 md:px-16 lg:px-24 max-w-7xl mx-auto text-center mb-16 relative z-10">
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -476,7 +438,7 @@ export default function TeamPage() {
         </div>
 
         {/* Level 3: Heads */}
-        <div className="relative flex flex-wrap justify-center items-center gap-16 md:gap-32 w-full max-w-[1400px] z-30">
+        <div className="relative flex flex-wrap justify-center items-center gap-x-16 gap-y-24 md:gap-x-32 md:gap-y-32 w-full max-w-[1400px] z-30">
           {heads.map((member, idx) => {
             return (
               <NetworkNode 
@@ -491,7 +453,7 @@ export default function TeamPage() {
         </div>
 
         {/* Level 4: Co-heads */}
-        <div className="relative flex flex-wrap justify-center items-center gap-12 md:gap-20 w-full max-w-[1200px] pt-16 z-20">
+        <div className="relative flex flex-wrap justify-center items-center gap-x-16 gap-y-24 md:gap-x-32 md:gap-y-32 w-full max-w-[1200px] pt-16 md:pt-24 z-20">
           {coheads.map((member, idx) => {
             return (
               <NetworkNode 
@@ -507,7 +469,7 @@ export default function TeamPage() {
 
         {/* Level 5: Team Members (Domain Columns) */}
         <div 
-          className="relative flex flex-nowrap justify-start lg:justify-center items-start gap-8 md:gap-16 w-full pt-20 overflow-x-auto pb-16 px-4 scrollbar-hide"
+          className="relative flex flex-wrap justify-center items-start gap-x-12 gap-y-20 md:gap-x-20 w-full max-w-[1400px] pt-20 pb-16 px-4"
         >
           <TeamBranch title="Technical" members={techMembers} hoveredId={hoveredId} setHoveredId={setHoveredId} cardDirection="right" />
           <TeamBranch title="Content" members={contentMembers} hoveredId={hoveredId} setHoveredId={setHoveredId} cardDirection="right" />
@@ -521,3 +483,4 @@ export default function TeamPage() {
     </div>
   );
 }
+

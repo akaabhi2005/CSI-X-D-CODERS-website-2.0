@@ -34,7 +34,7 @@ const getCoreValueIcon = (title: string) => {
 const subTeams = [
   {
     title: "Technical Team",
-    category: "Full-Stack & AI",
+    category: "Core Engineering",
     icon: Code,
     color: "sky",
     frontDesc: "Core developers building real-world projects & scalable tools.",
@@ -42,8 +42,17 @@ const subTeams = [
     points: ["Full-Stack & Web3 Development", "AI / ML & Cloud Infrastructure", "Open-Source Tooling & PRs"]
   },
   {
-    title: "Design & Media",
-    category: "UI/UX & 3D Motion",
+    title: "Content Team",
+    category: "Writing & Strategy",
+    icon: Sparkles,
+    color: "blue",
+    frontDesc: "Crafting engaging technical content and insightful blogs.",
+    backDesc: "We bring stories to life. The Content team writes tech blogs, scripts for videos, and plans strategies to keep the community engaged with the latest tech trends.",
+    points: ["Technical Blogs & Articles", "Video Scripting", "Content Strategy"]
+  },
+  {
+    title: "Designing Team",
+    category: "UI/UX & Branding",
     icon: PenTool,
     color: "purple",
     frontDesc: "The creative minds behind aesthetics, 3D graphics & UI/UX.",
@@ -51,16 +60,7 @@ const subTeams = [
     points: ["Figma UI/UX & Prototypes", "3D Graphics & Animations", "Visual Brand Identity"]
   },
   {
-    title: "Event Management",
-    category: "Logistics & Hackathons",
-    icon: Calendar,
-    color: "blue",
-    frontDesc: "Managing 48h hackathons, workshops & speaker logistics.",
-    backDesc: "We oversee end-to-end event execution, speaker hosting, platform judging setups, and physical venue coordination for 500+ attendees.",
-    points: ["48h Hackathon Operations", "Speaker Accommodations", "Live Bootcamp Coordination"]
-  },
-  {
-    title: "PR & Outreach",
+    title: "PR & Marketing",
     category: "Sponsorships & Connect",
     icon: Users,
     color: "indigo",
@@ -69,7 +69,7 @@ const subTeams = [
     points: ["Corporate Sponsorships", "Inter-College Outreach", "Alumni Career Guidance"]
   },
   {
-    title: "Photography & Socials",
+    title: "Photography and Social Media",
     category: "Media & Social Channels",
     icon: Camera,
     color: "cyan",
@@ -190,56 +190,54 @@ const ecosystemStyles: Record<string, {
 // --- MILESTONE TIMELINE DATA --- //
 const milestones = [
   {
-    year: "2015",
-    title: "Club Inception",
-    description: "CSI_SRMCEM X D'CODERS was officially founded at SRMCEM with just 20 members."
-  },
-  {
-    year: "2017",
-    title: "First National Hackathon",
-    description: "Hosted 500+ participants from all over India in our flagship coding event."
-  },
-  {
     year: "2020",
-    title: "Pan-India Expansion",
-    description: "Conducted virtual national bootcamps reaching over 2,000+ passionate engineers."
+    title: "The Genesis",
+    description: "Founded independently as D'Coders Club by passionate students to discuss logic, algorithms, and build a coding circle outside college labs."
   },
   {
-    year: "2024",
-    title: "The Next Era",
-    description: "Pioneering AI systems, production full-stack apps, and open source development."
+    year: "2021-2022",
+    title: "The Mega Merger",
+    description: "A major turning point. D'Coders merged with the Computer Society of India (CSI) Student Chapter to form CSI x D'Coders SRMCEM, gaining national credibility."
+  },
+  {
+    year: "2023",
+    title: "Digital Expansion",
+    description: "Launched our Discord server and 'The Insight Talk' webinar series, introducing freshers to Cyber Security, SecOps, and advanced coding roadmaps."
+  },
+  {
+    year: "2024-2025",
+    title: "Cupid Code Dominance",
+    description: "Expanded signature events like 'Cupid Code' on HackerRank. Members successfully represented the college in GSoC and national hackathons."
+  },
+  {
+    year: "2026",
+    title: "Modernization Drive",
+    description: "Continued restructuring with a massive recruitment drive for Core Coordinators, Content Leads, and Design Leads to power the next generation of the club."
   }
 ];
 
 // --- PAST CLUB HEADS (HALL OF FAME) DATA --- //
 const pastHeads = [
   {
-    name: "Rahul Sharma",
-    role: "President (2022-2023)",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400&h=400",
-    placedAt: "Google",
-    backBio: "Led the chapter to 10+ major hackathons and technical symposiums. Currently a Software Development Engineer focusing on cloud infrastructure."
+    name: "Shraddha",
+    role: "Lead (AIML)",
+    image: "/team/shraddha.jpg",
+    placedAt: "TBA",
+    backBio: "Lead at CSI SRMCEM. Driving technical excellence in Artificial Intelligence and Machine Learning."
   },
   {
-    name: "Sneha Patel",
-    role: "Vice President (2021-2022)",
-    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=400&h=400",
-    placedAt: "Microsoft",
-    backBio: "Pioneered UI/UX design masterclasses and frontend architecture bootcamps. Currently a Product Designer crafting global enterprise software."
+    name: "Aastha Prakash",
+    role: "Chapter Lead (2024-2025)",
+    image: "/team/aastha.jpg",
+    placedAt: "Josh Technology Group",
+    backBio: "Former Chapter Lead at CSI SRMCEM. Currently working as a Software Quality Analyst at Josh Technology Group."
   },
   {
-    name: "Aman Gupta",
+    name: "Hall of Fame 3",
     role: "President (2020-2021)",
     image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=400&h=400",
-    placedAt: "Amazon",
-    backBio: "Steered the community through virtual hackathons and online coding initiatives. Now an AWS Cloud Solutions Architect."
-  },
-  {
-    name: "Priya Singh",
-    role: "President (2019-2020)",
-    image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=400&h=400",
-    placedAt: "Atlassian",
-    backBio: "Built the foundation of our open-source and competitive programming culture. Working as a Backend Systems Engineer."
+    placedAt: "TBA",
+    backBio: "Details pending..."
   }
 ];
 
@@ -260,22 +258,22 @@ export default function AboutPage() {
   const [legacyList, setLegacyList] = useState(pastHeads);
 
   useEffect(() => {
-    const loadData = () => {
-      const storedSubTeams = DataStore.getSubTeams();
+    const loadData = async () => {
+      const storedSubTeams = await DataStore.getSubTeams();
       if (storedSubTeams && storedSubTeams.length > 0) {
         setSubTeamsList(storedSubTeams.map(s => ({
           ...s,
           icon: getSubTeamIcon(s.title)
         })));
       }
-      const storedCoreValues = DataStore.getCoreValues();
+      const storedCoreValues = await DataStore.getCoreValues();
       if (storedCoreValues && storedCoreValues.length > 0) {
         setCoreValuesList(storedCoreValues.map(c => ({
           ...c,
           icon: getCoreValueIcon(c.title)
         })));
       }
-      const storedLegacy = DataStore.getLegacyHeads();
+      const storedLegacy = await DataStore.getLegacyHeads();
       if (storedLegacy && storedLegacy.length > 0) {
         setLegacyList(storedLegacy.map(l => ({
           name: l.name,
@@ -304,8 +302,8 @@ export default function AboutPage() {
   return (
     <div className="relative overflow-hidden pb-32">
       {/* Ambient Backgrounds */}
-      <div className={cn("absolute top-0 left-0 w-full h-[500px] blur-[150px] pointer-events-none -z-10", config.glowClass1)} />
-      <div className={cn("absolute top-1/3 right-0 w-[500px] h-[500px] blur-[150px] pointer-events-none -z-10", config.glowClass2)} />
+      <div className={cn("absolute top-0 left-0 w-full h-[500px] blur-[80px] md:blur-[150px] opacity-60 md:opacity-100 pointer-events-none -z-10", config.glowClass1)} />
+      <div className={cn("absolute top-1/3 right-0 w-[500px] h-[500px] blur-[80px] md:blur-[150px] opacity-60 md:opacity-100 pointer-events-none -z-10", config.glowClass2)} />
 
       {/* ========================================================================= */}
       {/* 1. HERO & OUR STORY */}
@@ -344,7 +342,7 @@ export default function AboutPage() {
       {/* 2. OUR ECOSYSTEM (OFFICIAL CONTENT SECTION WITH 3D FLIP CARDS) */}
       {/* ========================================================================= */}
       <section className="py-24 px-4 md:px-16 lg:px-24 max-w-7xl mx-auto relative">
-        <div className={cn("absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl h-[400px] blur-[150px] pointer-events-none -z-10", config.glowClass1)} />
+        <div className={cn("absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl h-[400px] blur-[80px] md:blur-[150px] opacity-60 md:opacity-100 pointer-events-none -z-10", config.glowClass1)} />
 
         <motion.div
           initial="hidden"
@@ -366,7 +364,7 @@ export default function AboutPage() {
         </motion.div>
 
         {/* 5 Interactive Sub-Teams Domain Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 xl:gap-6">
           {subTeamsList.map((item, i) => {
             const style = ecosystemStyles[item.color] || ecosystemStyles.sky;
             const Icon = item.icon || Layers;
@@ -378,7 +376,7 @@ export default function AboutPage() {
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.08 }}
                 onClick={() => toggleCardFlip(`subteam-${i}`)}
-                className="group h-[380px] [perspective:1000px] cursor-pointer"
+                className="group h-[300px] [perspective:1000px] cursor-pointer"
               >
                 <div className={cn(
                   "relative w-full h-full transition-transform duration-700 [transform-style:preserve-3d] group-hover:[transform:rotateY(180deg)]",
@@ -442,7 +440,7 @@ export default function AboutPage() {
       {/* 3. CORE VALUES (THE 4 FOUNDATIONAL PILLARS) */}
       {/* ========================================================================= */}
       <section className="py-24 px-4 md:px-16 lg:px-24 max-w-7xl mx-auto relative border-t border-slate-800/80">
-        <div className={cn("absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl h-[400px] blur-[150px] pointer-events-none -z-10", config.glowClass2)} />
+        <div className={cn("absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl h-[400px] blur-[80px] md:blur-[150px] opacity-60 md:opacity-100 pointer-events-none -z-10", config.glowClass2)} />
 
         <motion.div
           initial="hidden"
@@ -691,7 +689,7 @@ export default function AboutPage() {
           <p className="text-slate-400 max-w-xl mx-auto">The visionaries and student leaders who led CSI_SRMCEM X D&apos;CODERS to historic heights.</p>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 max-w-5xl mx-auto gap-8">
           {legacyList.map((head, i) => (
             <motion.div
               key={head.name + i}
@@ -793,3 +791,4 @@ export default function AboutPage() {
     </div>
   );
 }
+

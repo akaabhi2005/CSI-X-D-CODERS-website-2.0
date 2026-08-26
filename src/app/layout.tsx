@@ -19,12 +19,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" data-theme="electric-cyber">
-      <body className={inter.className}>
+    <html lang="en" data-theme="electric-cyber" className="overflow-x-hidden">
+      <body className={inter.className + " overflow-x-hidden max-w-[100vw]"}>
         <ThemeProvider>
           <ParticlesBackground />
           <Navbar />
-          <main className="pt-16 min-h-screen">
+          <main className="pt-16 min-h-screen w-full overflow-x-hidden">
             {children}
           </main>
           <Footer />
