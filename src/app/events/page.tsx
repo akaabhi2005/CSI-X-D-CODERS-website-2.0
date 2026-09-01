@@ -144,6 +144,9 @@ export default function EventsPage() {
                       <img 
                         src={event.image} 
                         alt={event.title} 
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&q=80&w=800&h=400";
+                        }}
                         className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700 opacity-85 group-hover:opacity-100"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
@@ -272,6 +275,9 @@ export default function EventsPage() {
                 <img
                   src={selectedEvent.image}
                   alt={selectedEvent.title}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&q=80&w=800&h=400";
+                  }}
                   className="w-full h-full object-cover object-top"
                 />
                 

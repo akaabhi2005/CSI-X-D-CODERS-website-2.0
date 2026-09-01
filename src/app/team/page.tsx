@@ -113,7 +113,14 @@ const NetworkNode = ({ member, direction, isFaded, setHoveredId, size = "lg" }: 
           animate={{ scale: isOpen ? 1.15 : 1 }}
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
         >
-          <img src={member.image} alt={member.name} className="w-full h-full object-cover filter grayscale contrast-125 opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition duration-500 scale-100 group-hover:scale-110" />
+          <img 
+            src={member.image} 
+            alt={member.name} 
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}&background=0f172a&color=38bdf8&bold=true`;
+            }}
+            className="w-full h-full object-cover filter grayscale contrast-125 opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition duration-500 scale-100 group-hover:scale-110" 
+          />
         </motion.div>
 
         {/* Floating Label (Hides when open) */}

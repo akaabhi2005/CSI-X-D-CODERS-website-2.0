@@ -913,9 +913,57 @@ async function fetchFromSupabase<T>(table: string, fallback: T[]): Promise<T[]> 
     if (!data || data.length === 0) return fallback;
     return data as T[];
   } catch (error) {
-    console.error(`Error fetching from ${table}:`, error);
+    console.warn(`Notice fetching from ${table}:`, error);
     return fallback;
   }
+}
+
+const LEGACY_TEAM_IMAGE_MAP: Record<string, string> = {
+  "aditya.jpg.jpeg": "/team/adityamaddheshiya.jpg.jpeg",
+  "/team/aditya.jpg.jpeg": "/team/adityamaddheshiya.jpg.jpeg",
+  "aniket.jpg.jpeg": "/team/aniket.jpg.jpg",
+  "/team/aniket.jpg.jpeg": "/team/aniket.jpg.jpg",
+  "dhruv.jpg.jpeg": "/team/dhruvbajpai.jpg.jpg",
+  "/team/dhruv.jpg.jpeg": "/team/dhruvbajpai.jpg.jpg",
+  "ayushman.jpg.jpeg": "/team/ayushmanpandey.jpg.jpg",
+  "/team/ayushman.jpg.jpeg": "/team/ayushmanpandey.jpg.jpg",
+  "satakshi.jpg.jpeg": "/team/sarakshi.jpg.jpg",
+  "/team/satakshi.jpg.jpeg": "/team/sarakshi.jpg.jpg",
+  "/team/satakshi.jpg.jpg": "/team/sarakshi.jpg.jpg",
+  "supriya.jpg.jpeg": "/team/supriya.jpg.jpg",
+  "/team/supriya.jpg.jpeg": "/team/supriya.jpg.jpg",
+  "disha.jpg.jpeg": "/team/dishayadav.jpg.jpeg",
+  "/team/disha.jpg.jpeg": "/team/dishayadav.jpg.jpeg",
+  "priya.jpg.jpeg": "/team/priya.jpg.jpg",
+  "/team/priya.jpg.jpeg": "/team/priya.jpg.jpg",
+  "priyanshi.jpg.jpeg": "/team/priyanshi.jpg",
+  "/team/priyanshi.jpg.jpeg": "/team/priyanshi.jpg",
+  "mahi.jpg.jpeg": "/team/mahishukla.jpg.png",
+  "/team/mahi.jpg.jpeg": "/team/mahishukla.jpg.png",
+  "aditi.jpg.jpeg": "/team/aditimishra.jpg.jpg",
+  "/team/aditi.jpg.jpeg": "/team/aditimishra.jpg.jpg",
+  "pratik.jpg.jpeg": "/team/pratik.jpg.jpg",
+  "/team/pratik.jpg.jpeg": "/team/pratik.jpg.jpg",
+  "arya.jpg.jpeg": "/team/arya.jpg.jpg",
+  "/team/arya.jpg.jpeg": "/team/arya.jpg.jpg",
+  "ayan.jpg.jpeg": "/team/ayan.jpg.jpg",
+  "/team/ayan.jpg.jpeg": "/team/ayan.jpg.jpg",
+};
+
+export function normalizeTeamImage(img?: string, defImg?: string): string {
+  if (!img) return defImg || "";
+  const cleaned = img.trim();
+  if (LEGACY_TEAM_IMAGE_MAP[cleaned]) {
+    return LEGACY_TEAM_IMAGE_MAP[cleaned];
+  }
+  const filename = cleaned.split('/').pop() || "";
+  if (LEGACY_TEAM_IMAGE_MAP[filename]) {
+    return LEGACY_TEAM_IMAGE_MAP[filename];
+  }
+  if (!cleaned.startsWith('/') && !cleaned.startsWith('http') && !cleaned.startsWith('data:')) {
+    return `/team/${cleaned}`;
+  }
+  return cleaned;
 }
 
 // Helper: Save to Supabase
@@ -937,7 +985,7 @@ async function saveToSupabase<T extends { id: string }>(table: string, items: T[
       window.dispatchEvent(new Event("csi_data_updated"));
     }
   } catch (error: any) {
-    console.error(`Error saving to ${table}:`, error?.message || error?.details || JSON.stringify(error));
+    console.warn(`Notice saving to ${table}:`, error?.message || error?.details || JSON.stringify(error));
   }
 }
 
@@ -946,7 +994,6 @@ export const DataStore = {
   // Events
   getEvents: async (): Promise<EventItem[]> => {
     const fetched = await fetchFromSupabase<EventItem>('events', defaultEvents);
-    // Return exact fetched records from Supabase, mapping image fallbacks from defaultEvents if needed
     return fetched.map(item => {
       const def = defaultEvents.find(d => d.id === item.id);
       return {
@@ -964,12 +1011,12 @@ export const DataStore = {
   // Team
   getTeam: async (): Promise<TeamMemberItem[]> => {
     const fetched = await fetchFromSupabase<TeamMemberItem>('team', defaultTeam);
-    // Return exact fetched records from Supabase, mapping image fallbacks from defaultTeam if needed
     return fetched.map(item => {
       const def = defaultTeam.find(d => d.id === item.id || d.name.toLowerCase() === item.name.toLowerCase());
+      const normalizedImg = normalizeTeamImage(item.image, def?.image);
       return {
         ...item,
-        image: (item.image && !item.image.includes('unsplash.com')) ? item.image : (def?.image || item.image)
+        image: normalizedImg
       };
     });
   },
@@ -1036,9 +1083,8 @@ export const DataStore = {
     }
   },
 
-  // Admin Password
   getAdminPassword: (): string => {
-    const defaultSecret = process.env.NEXT_PUBLIC_ADMIN_SECRET || "csidcoders2024";
+    const defaultSecret = process.env.NEXT_PUBLIC_ADMIN_SECRET || "admin123";
     if (typeof window === "undefined") return defaultSecret;
     return localStorage.getItem("csi_cms_admin_pwd") || defaultSecret;
   },

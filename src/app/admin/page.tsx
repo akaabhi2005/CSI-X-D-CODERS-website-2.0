@@ -176,7 +176,10 @@ export default function AdminPage() {
 
   const handleSignOut = async () => {
     try {
-      await supabase.auth.signOut();
+      const { data } = await supabase.auth.getSession();
+      if (data?.session) {
+        await supabase.auth.signOut();
+      }
     } catch (err) {
       // ignore
     }
@@ -275,6 +278,32 @@ export default function AdminPage() {
     }
   };
 
+  const handleFileUpload = async (file: File): Promise<string> => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+      if (res.ok) {
+        const result = await res.json();
+        if (result.success && result.url) {
+          return result.url;
+        }
+      }
+    } catch (err) {
+      console.warn("API upload fetch notice (falling back to Base64 encoding):", err);
+    }
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        resolve(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handleSaveEvent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!eventForm.title || !eventForm.date) return;
@@ -282,28 +311,7 @@ export default function AdminPage() {
     let finalImageUrl = eventForm.image || "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&q=80&w=800&h=400";
     if (eventSelectedFile) {
       setIsUploading(true);
-      try {
-        const formData = new FormData();
-        formData.append("file", eventSelectedFile);
-        const res = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
-        });
-        const result = await res.json();
-        
-        if (result.success) {
-          finalImageUrl = result.url;
-        } else {
-          alert("Failed to upload image.");
-          setIsUploading(false);
-          return;
-        }
-      } catch (err) {
-        console.error("Upload failed", err);
-        alert("Error uploading image.");
-        setIsUploading(false);
-        return;
-      }
+      finalImageUrl = await handleFileUpload(eventSelectedFile);
     }
     setIsUploading(false);
 
@@ -405,28 +413,7 @@ export default function AdminPage() {
 
     if (teamSelectedFile) {
       setIsUploading(true);
-      const formData = new FormData();
-      formData.append("file", teamSelectedFile);
-      try {
-        const res = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
-        });
-        const result = await res.json();
-        
-        if (result.success) {
-          finalImageUrl = result.url;
-        } else {
-          alert("Failed to upload image.");
-          setIsUploading(false);
-          return;
-        }
-      } catch (err) {
-        console.error("Upload failed", err);
-        alert("Error uploading image.");
-        setIsUploading(false);
-        return;
-      }
+      finalImageUrl = await handleFileUpload(teamSelectedFile);
     }
     
     setIsUploading(false);
@@ -512,30 +499,7 @@ export default function AdminPage() {
     let finalImageUrl = legacyForm.image || "";
 
     if (legacySelectedFile) {
-      try {
-        const formData = new FormData();
-        formData.append("file", legacySelectedFile);
-        
-        const res = await fetch("/api/upload", {
-          method: "POST",
-          body: formData
-        });
-        
-        const result = await res.json();
-        
-        if (result.success) {
-          finalImageUrl = result.url;
-        } else {
-          alert("Failed to upload image.");
-          setIsUploading(false);
-          return;
-        }
-      } catch (err) {
-        console.error("Upload failed", err);
-        alert("Error uploading image.");
-        setIsUploading(false);
-        return;
-      }
+      finalImageUrl = await handleFileUpload(legacySelectedFile);
     }
 
     let updated: LegacyHeadItem[];
@@ -818,30 +782,7 @@ export default function AdminPage() {
     let finalImageUrl = galleryForm.image || "";
 
     if (gallerySelectedFile) {
-      try {
-        const formData = new FormData();
-        formData.append("file", gallerySelectedFile);
-        
-        const res = await fetch("/api/upload", {
-          method: "POST",
-          body: formData
-        });
-        
-        const result = await res.json();
-        
-        if (result.success) {
-          finalImageUrl = result.url;
-        } else {
-          alert("Failed to upload image.");
-          setIsUploading(false);
-          return;
-        }
-      } catch (err) {
-        console.error("Upload failed", err);
-        alert("Error uploading image.");
-        setIsUploading(false);
-        return;
-      }
+      finalImageUrl = await handleFileUpload(gallerySelectedFile);
     }
 
     let updated: GalleryItem[];

@@ -683,13 +683,15 @@ export default function AboutPage() {
             <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/10 rounded-full blur-[50px] group-hover:bg-blue-500/20 transition-all pointer-events-none" />
 
             <div>
-              {/* Header Badge & Avatar */}
               <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-6">
                 <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl overflow-hidden border-2 border-blue-500/40 shadow-[0_0_20px_rgba(59,130,246,0.2)] shrink-0 bg-slate-950 group-hover:scale-105 transition-transform duration-500">
                   <img
-                    src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400&h=400"
+                    src="/team/saurabh.jpg.jpeg"
                     alt="Er. Saurabh Bahadur Bais"
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = "https://ui-avatars.com/api/?name=Saurabh+Bahadur+Bais&background=0f172a&color=38bdf8&bold=true";
+                    }}
                   />
                 </div>
 
