@@ -457,12 +457,12 @@ export default function AdminPage() {
       updated = [...team, newItem];
     }
     setTeam(updated);
-    DataStore.saveTeam(updated);
+    await DataStore.saveTeam(updated);
     setModalMode(null);
     showToast("Team member saved successfully!");
   };
 
-  const handleDuplicateTeam = (item: TeamMemberItem) => {
+  const handleDuplicateTeam = async (item: TeamMemberItem) => {
     const duplicated: TeamMemberItem = {
       ...item,
       id: `team-${Date.now()}`,
@@ -470,15 +470,15 @@ export default function AdminPage() {
     };
     const updated = [...team, duplicated];
     setTeam(updated);
-    DataStore.saveTeam(updated);
+    await DataStore.saveTeam(updated);
     showToast(`Duplicated ${item.name}`);
   };
 
-  const handleDeleteTeam = (id: string) => {
+  const handleDeleteTeam = async (id: string) => {
     if (!confirm("Are you sure you want to delete this team member?")) return;
     const updated = team.filter(m => m.id !== id);
     setTeam(updated);
-    DataStore.saveTeam(updated);
+    await DataStore.saveTeam(updated);
     showToast("Team member removed.");
   };
 
@@ -555,17 +555,17 @@ export default function AdminPage() {
       updated = [...legacyHeads, newItem];
     }
     setLegacyHeads(updated);
-    DataStore.saveLegacyHeads(updated);
+    await DataStore.saveLegacyHeads(updated);
     setModalMode(null);
     setIsUploading(false);
     showToast("Hall of Fame leader saved successfully!");
   };
 
-  const handleDeleteLegacy = (id: string) => {
+  const handleDeleteLegacy = async (id: string) => {
     if (!confirm("Are you sure you want to delete this alumni leader?")) return;
     const updated = legacyHeads.filter(l => l.id !== id);
     setLegacyHeads(updated);
-    DataStore.saveLegacyHeads(updated);
+    await DataStore.saveLegacyHeads(updated);
     showToast("Alumni leader removed.");
   };
 
@@ -592,7 +592,7 @@ export default function AdminPage() {
     }
   };
 
-  const handleSaveSubTeam = (e: React.FormEvent) => {
+  const handleSaveSubTeam = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!subTeamForm.title || !subTeamForm.frontDesc) return;
     const pts = (subTeamForm.pointsText || "")
@@ -621,16 +621,16 @@ export default function AdminPage() {
       updated = [...subTeams, newItem];
     }
     setSubTeams(updated);
-    DataStore.saveSubTeams(updated);
+    await DataStore.saveSubTeams(updated);
     setModalMode(null);
     showToast("Sub-Team domain saved!");
   };
 
-  const handleDeleteSubTeam = (id: string) => {
+  const handleDeleteSubTeam = async (id: string) => {
     if (!confirm("Are you sure you want to delete this sub-team?")) return;
     const updated = subTeams.filter(s => s.id !== id);
     setSubTeams(updated);
-    DataStore.saveSubTeams(updated);
+    await DataStore.saveSubTeams(updated);
     showToast("Sub-Team removed.");
   };
 
@@ -657,7 +657,7 @@ export default function AdminPage() {
     }
   };
 
-  const handleSaveCoreValue = (e: React.FormEvent) => {
+  const handleSaveCoreValue = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!coreValueForm.title || !coreValueForm.frontDesc) return;
     const pts = (coreValueForm.pointsText || "")
@@ -686,16 +686,16 @@ export default function AdminPage() {
       updated = [...coreValues, newItem];
     }
     setCoreValues(updated);
-    DataStore.saveCoreValues(updated);
+    await DataStore.saveCoreValues(updated);
     setModalMode(null);
     showToast("Core Value pillar saved!");
   };
 
-  const handleDeleteCoreValue = (id: string) => {
+  const handleDeleteCoreValue = async (id: string) => {
     if (!confirm("Are you sure you want to delete this core value?")) return;
     const updated = coreValues.filter(c => c.id !== id);
     setCoreValues(updated);
-    DataStore.saveCoreValues(updated);
+    await DataStore.saveCoreValues(updated);
     showToast("Core Value removed.");
   };
 
@@ -727,7 +727,7 @@ export default function AdminPage() {
     }
   };
 
-  const handleSaveNews = (e: React.FormEvent) => {
+  const handleSaveNews = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newsForm.title || !newsForm.pdfUrl) return;
     const topicsArray = (newsForm.topicsText || "")
@@ -768,26 +768,26 @@ export default function AdminPage() {
       }
     }
     setNewsIssues(updated);
-    DataStore.saveNewsIssues(updated);
+    await DataStore.saveNewsIssues(updated);
     setModalMode(null);
     showToast("News Gazette edition saved!");
   };
 
-  const handleSetCurrentNews = (id: string) => {
+  const handleSetCurrentNews = async (id: string) => {
     const updated = newsIssues.map(n => ({
       ...n,
       isCurrent: n.id === id
     }));
     setNewsIssues(updated);
-    DataStore.saveNewsIssues(updated);
+    await DataStore.saveNewsIssues(updated);
     showToast("Current live edition updated!");
   };
 
-  const handleDeleteNews = (id: string) => {
+  const handleDeleteNews = async (id: string) => {
     if (!confirm("Are you sure you want to delete this edition?")) return;
     const updated = newsIssues.filter(n => n.id !== id);
     setNewsIssues(updated);
-    DataStore.saveNewsIssues(updated);
+    await DataStore.saveNewsIssues(updated);
     showToast("News edition removed.");
   };
 
@@ -858,7 +858,7 @@ export default function AdminPage() {
       updated = [newItem, ...gallery];
     }
     setGallery(updated);
-    DataStore.saveGallery(updated);
+    await DataStore.saveGallery(updated);
     
     // Reset states
     setGallerySelectedFile(null);
@@ -867,18 +867,18 @@ export default function AdminPage() {
     showToast("Gallery moment saved!");
   };
 
-  const handleDeleteGallery = (id: string) => {
+  const handleDeleteGallery = async (id: string) => {
     if (!confirm("Are you sure you want to delete this photo?")) return;
     const updated = gallery.filter(g => g.id !== id);
     setGallery(updated);
-    DataStore.saveGallery(updated);
+    await DataStore.saveGallery(updated);
     showToast("Gallery photo removed.");
   };
 
   // --- STATS UPDATE --- //
-  const handleSaveStats = (e: React.FormEvent) => {
+  const handleSaveStats = async (e: React.FormEvent) => {
     e.preventDefault();
-    DataStore.saveStats(stats);
+    await DataStore.saveStats(stats);
     showToast("Homepage metrics saved successfully!");
   };
 
