@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
-import { Calendar, MapPin, Clock, ArrowRight, Sparkles } from "lucide-react";
+import { Calendar, MapPin, Clock, ArrowRight, Sparkles, X, ExternalLink, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/lib/themeContext";
 import { DataStore, EventItem } from "@/lib/dataStore";
@@ -20,6 +20,7 @@ export default function EventsPage() {
   const [activeTab, setActiveTab] = useState<Category>("upcoming");
   const [eventsData, setEventsData] = useState<EventItem[]>([]);
   const [visibleCount, setVisibleCount] = useState(6);
+  const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
 
   const loadData = async () => {
     setEventsData(await DataStore.getEvents());
@@ -134,7 +135,8 @@ export default function EventsPage() {
                   initial="hidden"
                   animate="visible"
                   exit="exit"
-                  className="group relative bg-slate-900/70 border border-slate-800 hover:border-sky-500/50 rounded-[28px] overflow-hidden shadow-2xl backdrop-blur-xl transition-all duration-500 flex flex-col justify-between hover:shadow-[0_0_35px_rgba(56,189,248,0.25)] hover:scale-[1.01]"
+                  onClick={() => setSelectedEvent(event)}
+                  className="group relative bg-slate-900/70 border border-slate-800 hover:border-sky-500/50 rounded-[28px] overflow-hidden shadow-2xl backdrop-blur-xl transition-all duration-500 flex flex-col justify-between hover:shadow-[0_0_35px_rgba(56,189,248,0.25)] hover:scale-[1.01] cursor-pointer"
                 >
                   <div>
                     {/* Event Image Banner */}
@@ -142,7 +144,7 @@ export default function EventsPage() {
                       <img 
                         src={event.image} 
                         alt={event.title} 
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-85 group-hover:opacity-100"
+                        className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700 opacity-85 group-hover:opacity-100"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
                       
@@ -190,9 +192,13 @@ export default function EventsPage() {
                   <div className="p-6 md:p-8 pt-0">
                     <button
                       type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedEvent(event);
+                      }}
                       className="w-full py-3 rounded-xl bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold flex items-center justify-center gap-2 text-sm shadow-[0_0_25px_rgba(56,189,248,0.3)] transition-all duration-300 hover:scale-[1.02] cursor-pointer"
                     >
-                      View Details
+                      View Details &amp; Register
                       <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </button>
                   </div>
@@ -229,6 +235,111 @@ export default function EventsPage() {
           </div>
         )}
       </div>
+
+      {/* ========================================================================= */}
+      {/* EVENT DETAILS & REGISTRATION MODAL POPUP */}
+      {/* ========================================================================= */}
+      <AnimatePresence>
+        {selectedEvent && (
+          <div className="fixed inset-0 z-[150] flex items-start justify-center p-3 sm:p-5 overflow-hidden pt-12 sm:pt-14 pb-6">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedEvent(null)}
+              className="fixed inset-0 bg-slate-950/85 backdrop-blur-md"
+            />
+
+            {/* Shifted Upwards Scrollable Modal Card */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ type: "spring", stiffness: 350, damping: 28 }}
+              className="relative w-full max-w-xl bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(56,189,248,0.2)] z-10 max-h-[85vh] flex flex-col"
+            >
+              {/* Sticky Close Button */}
+              <button
+                onClick={() => setSelectedEvent(null)}
+                className="absolute top-3.5 right-3.5 z-30 p-2 rounded-full bg-slate-950/80 text-slate-300 hover:text-white border border-slate-700 hover:border-slate-500 transition-all cursor-pointer shadow-lg backdrop-blur-md"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              {/* Cover Header Container (Full Height & Top Aligned Banner) */}
+              <div className="relative h-56 sm:h-64 md:h-72 w-full overflow-hidden bg-slate-950 shrink-0 border-b border-slate-800/80">
+                <img
+                  src={selectedEvent.image}
+                  alt={selectedEvent.title}
+                  className="w-full h-full object-cover object-top"
+                />
+                
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/10 to-transparent z-10 pointer-events-none" />
+              </div>
+
+              {/* Scrollable Body Content Inside Card */}
+              <div className="p-5 sm:p-7 relative z-10 bg-slate-900 overflow-y-auto flex-1 custom-scrollbar">
+                <h2 className="text-xl sm:text-2xl font-extrabold text-white mb-3 tracking-tight">
+                  {selectedEvent.title}
+                </h2>
+
+                {/* Key Details Bar */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6 p-4 rounded-2xl bg-slate-950/70 border border-slate-800/80">
+                  <div className="flex items-center text-xs sm:text-sm text-slate-200">
+                    <Calendar className="w-4 h-4 mr-2.5 text-sky-400 shrink-0" />
+                    <span>{selectedEvent.date}</span>
+                  </div>
+                  <div className="flex items-center text-xs sm:text-sm text-slate-200">
+                    <Clock className="w-4 h-4 mr-2.5 text-sky-400 shrink-0" />
+                    <span>{selectedEvent.time}</span>
+                  </div>
+                  <div className="flex items-center text-xs sm:text-sm text-slate-200">
+                    <MapPin className="w-4 h-4 mr-2.5 text-sky-400 shrink-0" />
+                    <span>{selectedEvent.location}</span>
+                  </div>
+                </div>
+
+                {/* Full Description */}
+                <div className="mb-8">
+                  <h4 className="text-xs uppercase font-mono font-bold text-slate-400 tracking-wider mb-2">About Event</h4>
+                  <p className="text-slate-300 text-sm sm:text-base leading-relaxed font-light whitespace-pre-line">
+                    {selectedEvent.description}
+                  </p>
+                </div>
+
+                {/* Registration Action Area */}
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-slate-800">
+                  <div className="text-slate-400 text-xs flex items-center gap-1.5">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>Organized by CSI_SRMCEM X D&apos;CODERS</span>
+                  </div>
+
+                  {selectedEvent.registrationUrl && selectedEvent.registrationUrl.trim() !== "" && selectedEvent.registrationUrl !== "#" ? (
+                    <a
+                      href={selectedEvent.registrationUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 hover:from-sky-400 hover:to-blue-500 text-white font-extrabold flex items-center justify-center gap-2 text-sm shadow-[0_0_30px_rgba(56,189,248,0.35)] transition-all hover:scale-105 cursor-pointer"
+                    >
+                      <span>Register Now</span>
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  ) : (
+                    <a
+                      href={`mailto:lead.csidcoders@gmail.com?subject=Registration Inquiry for ${encodeURIComponent(selectedEvent.title)}`}
+                      className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 hover:from-sky-400 hover:to-blue-500 text-white font-extrabold flex items-center justify-center gap-2 text-sm shadow-[0_0_30px_rgba(56,189,248,0.35)] transition-all hover:scale-105 cursor-pointer"
+                    >
+                      <span>Register Now</span>
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

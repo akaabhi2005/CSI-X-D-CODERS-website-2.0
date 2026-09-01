@@ -5,16 +5,16 @@ import {
   Lock, Trash2, Plus, Calendar as CalendarIcon, Users, Image as ImageIcon, 
   Award, LayoutDashboard, LogOut, Newspaper, BarChart3, Download, Upload, 
   RotateCcw, Edit3, Check, X, Shield, Sparkles, ExternalLink, FileText, CheckCircle2,
-  Search, Copy, Eye, SlidersHorizontal, RefreshCw, EyeOff
+  Search, Copy, Eye, SlidersHorizontal, RefreshCw, EyeOff, Star, Mail, Clock
 } from "lucide-react";
 import { 
   DataStore, EventItem, TeamMemberItem, LegacyHeadItem, SubTeamItem, 
-  CoreValueItem, NewsIssueItem, GalleryItem, ClubStats 
+  CoreValueItem, NewsIssueItem, GalleryItem, ClubStats, SubscriberItem
 } from "@/lib/dataStore";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 
-type ActiveTab = "dashboard" | "events" | "team" | "about" | "legacy" | "news" | "gallery" | "stats";
+type ActiveTab = "dashboard" | "events" | "team" | "about" | "legacy" | "news" | "gallery" | "stats" | "subscribers";
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -27,6 +27,7 @@ export default function AdminPage() {
   // Filters
   const [eventCategoryFilter, setEventCategoryFilter] = useState<string>("all");
   const [teamRoleFilter, setTeamRoleFilter] = useState<string>("all");
+  const [teamDomainFilter, setTeamDomainFilter] = useState<string>("all");
   const [gallerySizeFilter, setGallerySizeFilter] = useState<string>("all");
 
   // Dynamic CMS States
@@ -37,6 +38,7 @@ export default function AdminPage() {
   const [coreValues, setCoreValues] = useState<CoreValueItem[]>([]);
   const [newsIssues, setNewsIssues] = useState<NewsIssueItem[]>([]);
   const [gallery, setGallery] = useState<GalleryItem[]>([]);
+  const [subscribers, setSubscribers] = useState<SubscriberItem[]>([]);
   const [stats, setStats] = useState<ClubStats>({
     eventsHosted: "50+",
     activeMembers: "1k+",
@@ -60,11 +62,15 @@ export default function AdminPage() {
   const [gallerySelectedFile, setGallerySelectedFile] = useState<File | null>(null);
   const [teamSelectedFile, setTeamSelectedFile] = useState<File | null>(null);
   const [legacySelectedFile, setLegacySelectedFile] = useState<File | null>(null);
+  const [eventSelectedFile, setEventSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   
-  // Password change state
+  // Admin Security States
   const [newPassword, setNewPassword] = useState("");
   const [showPasswordChange, setShowPasswordChange] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   // Load from DataStore
   const reloadData = async () => {
@@ -75,20 +81,28 @@ export default function AdminPage() {
     setCoreValues(await DataStore.getCoreValues());
     setNewsIssues(await DataStore.getNewsIssues());
     setGallery(await DataStore.getGallery());
+    setSubscribers(await DataStore.getSubscribers());
     setStats(await DataStore.getStats());
   };
 
   useEffect(() => {
-    // Check active session on load
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
+    // Check active session on load (Supabase session or active browser session token)
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const hasLocalToken = typeof window !== "undefined" && sessionStorage.getItem("csi_admin_authenticated") === "true";
+      
+      if (session || hasLocalToken) {
         setIsAuthenticated(true);
         reloadData();
+      } else {
+        setIsAuthenticated(false);
       }
-    });
+    };
+    checkAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) {
+      const hasLocalToken = typeof window !== "undefined" && sessionStorage.getItem("csi_admin_authenticated") === "true";
+      if (session || hasLocalToken) {
         setIsAuthenticated(true);
         reloadData();
       } else {
@@ -106,36 +120,90 @@ export default function AdminPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
-      alert("Please enter both email and password.");
+    setLoginError(null);
+
+    const cleanEmail = email.trim();
+    const cleanPassword = password.trim();
+
+    if (!cleanEmail || !cleanPassword) {
+      setLoginError("Please enter both Admin Email and Password.");
       return;
     }
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      alert("Login failed: " + error.message);
-      setPassword("");
-    } else {
-      setIsAuthenticated(true);
-      setPassword("");
-      showToast("Signed in to Admin CMS successfully!");
+
+    setIsLoggingIn(true);
+
+    try {
+      // 1. Primary Attempt: Supabase Authentication
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: cleanEmail,
+        password: cleanPassword
+      });
+
+      if (!error && data?.session) {
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem("csi_admin_authenticated", "true");
+        }
+        setIsAuthenticated(true);
+        setPassword("");
+        setIsLoggingIn(false);
+        showToast("Signed in to Admin CMS successfully!");
+        return;
+      }
+
+      // 2. Secondary Attempt: Fallback Master Passcode Check
+      const adminSecret = process.env.NEXT_PUBLIC_ADMIN_SECRET || DataStore.getAdminPassword();
+      const isMasterValid = cleanPassword === adminSecret || cleanPassword === DataStore.getAdminPassword();
+
+      if (isMasterValid) {
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem("csi_admin_authenticated", "true");
+        }
+        setIsAuthenticated(true);
+        setPassword("");
+        setIsLoggingIn(false);
+        showToast("Signed in to Admin CMS successfully!");
+        return;
+      }
+
+      // If both authentication checks fail
+      setLoginError("Invalid credentials. Please verify your email and password.");
+    } catch (err: any) {
+      setLoginError("Authentication error: " + (err?.message || "Unable to sign in."));
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      // ignore
+    }
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("csi_admin_authenticated");
+    }
     setIsAuthenticated(false);
     setEmail("");
     setPassword("");
-    showToast("Signed out.");
+    showToast("Signed out of Admin CMS.");
   };
 
-  const handleChangePassword = (e: React.FormEvent) => {
+  const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPassword.trim()) return;
+
+    try {
+      // Try updating Supabase Auth user password if logged in via Supabase
+      await supabase.auth.updateUser({ password: newPassword.trim() });
+    } catch (err) {
+      console.warn("Supabase auth password update skipped:", err);
+    }
+
     DataStore.saveAdminPassword(newPassword.trim());
     setNewPassword("");
     setShowPasswordChange(false);
-    showToast("Master password updated successfully!");
+    showToast("Admin master password updated successfully!");
   };
 
   // --- EXPORT & IMPORT BACKUP --- //
@@ -181,10 +249,14 @@ export default function AdminPage() {
 
   // --- EVENTS CRUD --- //
   const openEventModal = (item?: EventItem) => {
+    setEventSelectedFile(null);
     if (item) {
       setModalMode("edit");
       setEditingId(item.id);
-      setEventForm(item);
+      setEventForm({
+        ...item,
+        isFeatured: item.isFeatured ?? (item.category === "upcoming" || item.category === "current")
+      });
     } else {
       setModalMode("add");
       setEditingId(null);
@@ -197,17 +269,51 @@ export default function AdminPage() {
         color: "sky",
         image: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&q=80&w=800&h=400",
         description: "",
-        registrationUrl: "https://forms.google.com"
+        registrationUrl: "https://forms.google.com",
+        isFeatured: true
       });
     }
   };
 
-  const handleSaveEvent = (e: React.FormEvent) => {
+  const handleSaveEvent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!eventForm.title || !eventForm.date) return;
+
+    let finalImageUrl = eventForm.image || "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&q=80&w=800&h=400";
+    if (eventSelectedFile) {
+      setIsUploading(true);
+      try {
+        const formData = new FormData();
+        formData.append("file", eventSelectedFile);
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+        const result = await res.json();
+        
+        if (result.success) {
+          finalImageUrl = result.url;
+        } else {
+          alert("Failed to upload image.");
+          setIsUploading(false);
+          return;
+        }
+      } catch (err) {
+        console.error("Upload failed", err);
+        alert("Error uploading image.");
+        setIsUploading(false);
+        return;
+      }
+    }
+    setIsUploading(false);
+
     let updated: EventItem[];
+    const isAutoFeatured = eventForm.isFeatured !== undefined 
+      ? eventForm.isFeatured 
+      : (eventForm.category === "upcoming" || eventForm.category === "current");
+
     if (modalMode === "edit" && editingId) {
-      updated = events.map(ev => ev.id === editingId ? { ...ev, ...eventForm } as EventItem : ev);
+      updated = events.map(ev => ev.id === editingId ? { ...ev, ...eventForm, image: finalImageUrl, isFeatured: isAutoFeatured } as EventItem : ev);
     } else {
       const newItem: EventItem = {
         id: `evt-${Date.now()}`,
@@ -217,23 +323,39 @@ export default function AdminPage() {
         location: eventForm.location || "SRMCEM",
         category: (eventForm.category as any) || "upcoming",
         color: (eventForm.color as any) || "sky",
-        image: eventForm.image || "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&q=80&w=800&h=400",
+        image: finalImageUrl,
         description: eventForm.description || "",
-        registrationUrl: eventForm.registrationUrl || ""
+        registrationUrl: eventForm.registrationUrl || "",
+        isFeatured: isAutoFeatured
       };
       updated = [newItem, ...events];
     }
     setEvents(updated);
     DataStore.saveEvents(updated);
     setModalMode(null);
-    showToast("Event saved successfully!");
+    showToast("Event saved successfully & updated on Homepage Featured Highlights!");
   };
 
   const handleEventCategoryChange = (id: string, newCategory: "upcoming" | "current" | "past") => {
-    const updated = events.map(ev => ev.id === id ? { ...ev, category: newCategory } : ev);
+    const updated = events.map(ev => {
+      if (ev.id === id) {
+        // If moving to upcoming or current, automatically set isFeatured to true
+        const shouldBeFeatured = newCategory === "upcoming" || newCategory === "current" ? true : ev.isFeatured;
+        return { ...ev, category: newCategory, isFeatured: shouldBeFeatured };
+      }
+      return ev;
+    });
     setEvents(updated);
     DataStore.saveEvents(updated);
     showToast(`Event status updated to "${newCategory}"`);
+  };
+
+  const handleToggleEventFeatured = (id: string) => {
+    const updated = events.map(ev => ev.id === id ? { ...ev, isFeatured: !ev.isFeatured } : ev);
+    setEvents(updated);
+    DataStore.saveEvents(updated);
+    const target = updated.find(ev => ev.id === id);
+    showToast(target?.isFeatured ? "Marked as Featured Highlight ⭐" : "Removed from Featured Highlights");
   };
 
   const handleDeleteEvent = (id: string) => {
@@ -760,6 +882,31 @@ export default function AdminPage() {
     showToast("Homepage metrics saved successfully!");
   };
 
+  // --- SUBSCRIBER MANAGEMENT --- //
+  const handleDeleteSubscriber = async (identifier: string) => {
+    if (!confirm(`Are you sure you want to remove subscriber: ${identifier}?`)) return;
+    await DataStore.deleteSubscriber(identifier);
+    setSubscribers(await DataStore.getSubscribers());
+    showToast("Subscriber removed successfully.");
+  };
+
+  const handleExportSubscribersCSV = () => {
+    if (subscribers.length === 0) {
+      alert("No subscribers to export.");
+      return;
+    }
+    const headers = "ID,Email,Date Subscribed\n";
+    const rows = subscribers.map((s, idx) => `"${s.id || idx + 1}","${s.email}","${s.created_at || new Date().toISOString()}"`).join("\n");
+    const blob = new Blob([headers + rows], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `csi_newsletter_subscribers_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast("Subscribers list exported as CSV!");
+  };
+
   // --- SEARCH & FILTER LOGIC --- //
   const filteredEvents = events.filter(e => {
     const matchesSearch = e.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -772,15 +919,56 @@ export default function AdminPage() {
   const filteredTeam = team.filter(m => {
     const matchesSearch = m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       m.position.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      m.skills.some(s => s.toLowerCase().includes(searchQuery.toLowerCase()));
-    const isExecutive = m.position.toUpperCase().includes("CEO") || 
-      m.position.toUpperCase().includes("COO") || 
-      m.position.toUpperCase().includes("FOUNDER") ||
-      m.position.toUpperCase().includes("PRESIDENT");
+      (m.skills && m.skills.some(s => s.toLowerCase().includes(searchQuery.toLowerCase())));
+
+    const posUpper = (m.position || "").toUpperCase();
+    const lvl = m.level || (
+      posUpper.includes("PRESIDENT") ? (posUpper.includes("VICE") ? 2 : 1) :
+      posUpper.includes("HEAD") ? (posUpper.includes("CO-HEAD") || posUpper.includes("CO HEAD") ? 4 : 3) :
+      5
+    );
+
+    const isExecutive = lvl === 1 || lvl === 2 || posUpper.includes("PRESIDENT") || posUpper.includes("VICE PRESIDENT");
+    const isCore = (lvl === 3 || lvl === 4 || posUpper.includes("HEAD") || posUpper.includes("CO-HEAD") || posUpper.includes("LEAD")) && !isExecutive;
+    const isGeneralMember = lvl >= 5 || posUpper.includes("MEMBER") || (!isExecutive && !isCore);
+
     const matchesRole = teamRoleFilter === "all" || 
       (teamRoleFilter === "executive" && isExecutive) ||
-      (teamRoleFilter === "core" && !isExecutive);
-    return matchesSearch && matchesRole;
+      (teamRoleFilter === "core" && isCore) ||
+      (teamRoleFilter === "members" && isGeneralMember);
+
+    const domStr = ((m.domain || "") + " " + (m.position || "")).toLowerCase();
+    const memberDomain = 
+      domStr.includes("tech") ? "technical" :
+      (domStr.includes("design") || domStr.includes("ui/ux")) ? "designing" :
+      domStr.includes("content") ? "content" :
+      (/\bpr\b/.test(domStr) || domStr.includes("marketing") || domStr.includes("outreach")) ? "marketing" :
+      (domStr.includes("photo") || domStr.includes("media")) ? "photography" :
+      "executive";
+
+    const matchesDomain = teamDomainFilter === "all" || memberDomain === teamDomainFilter;
+
+    return matchesSearch && matchesRole && matchesDomain;
+  }).sort((a, b) => {
+    const posA = (a.position || "").toUpperCase();
+    const posB = (b.position || "").toUpperCase();
+    
+    const lvlA = a.level || (
+      posA.includes("PRESIDENT") ? (posA.includes("VICE") ? 2 : 1) :
+      posA.includes("HEAD") ? (posA.includes("CO-HEAD") || posA.includes("CO HEAD") ? 4 : 3) : 5
+    );
+    const lvlB = b.level || (
+      posB.includes("PRESIDENT") ? (posB.includes("VICE") ? 2 : 1) :
+      posB.includes("HEAD") ? (posB.includes("CO-HEAD") || posB.includes("CO HEAD") ? 4 : 3) : 5
+    );
+
+    // 1. Leadership Rank Priority (Level 1: President, 2: VP, 3: Head, 4: Co-head, 5: Member)
+    if (lvlA !== lvlB) {
+      return lvlA - lvlB;
+    }
+
+    // 2. Alphabetical Sort A-Z by Name within same level
+    return a.name.localeCompare(b.name);
   });
 
   const filteredLegacy = legacyHeads.filter(l => 
@@ -815,6 +1003,10 @@ export default function AdminPage() {
     return matchesSearch && matchesSize;
   });
 
+  const filteredSubscribers = subscribers.filter(s => 
+    s.email.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   // --- LOGIN VIEW --- //
   if (!isAuthenticated) {
     return (
@@ -827,9 +1019,17 @@ export default function AdminPage() {
             </div>
           </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-white text-center mb-1 tracking-tight">Admin CMS Portal</h2>
-          <p className="text-slate-400 text-xs sm:text-sm text-center mb-8">
+          <p className="text-slate-400 text-xs sm:text-sm text-center mb-6">
             CSI_SRMCEM X D&apos;CODERS Content Management System
           </p>
+
+          {loginError && (
+            <div className="mb-6 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-mono flex items-center gap-2">
+              <X className="w-4 h-4 shrink-0 text-rose-400" />
+              <span>{loginError}</span>
+            </div>
+          )}
+
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
               <label className="block text-xs font-mono uppercase text-slate-400 mb-2">Admin Email</label>
@@ -837,25 +1037,48 @@ export default function AdminPage() {
                 type="email" 
                 placeholder="admin@csisrmcem.org" 
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => { setEmail(e.target.value); setLoginError(null); }}
                 autoComplete="email"
+                required
                 className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-all text-sm font-mono tracking-wider mb-4"
               />
               <label className="block text-xs font-mono uppercase text-slate-400 mb-2">Password</label>
-              <input 
-                type="password" 
-                placeholder="Enter password" 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete="current-password"
-                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-all text-sm font-mono tracking-wider"
-              />
+              <div className="relative">
+                <input 
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter admin password" 
+                  value={password}
+                  onChange={(e) => { setPassword(e.target.value); setLoginError(null); }}
+                  autoComplete="current-password"
+                  required
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3.5 pr-12 text-white focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-all text-sm font-mono tracking-wider"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors p-1"
+                  title={showPassword ? "Hide Password" : "Show Password"}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
             <button 
               type="submit" 
-              className="w-full bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold py-3.5 rounded-xl transition-all shadow-[0_0_25px_rgba(56,189,248,0.3)] hover:scale-[1.02]"
+              disabled={isLoggingIn}
+              className="w-full bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 hover:from-sky-400 hover:to-blue-500 disabled:opacity-50 text-white font-bold py-3.5 rounded-xl transition-all shadow-[0_0_25px_rgba(56,189,248,0.3)] hover:scale-[1.02] flex items-center justify-center gap-2 cursor-pointer"
             >
-              Sign In to CMS
+              {isLoggingIn ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <span>Verifying Credentials...</span>
+                </>
+              ) : (
+                <>
+                  <Lock className="w-4 h-4" />
+                  <span>Sign In to CMS</span>
+                </>
+              )}
             </button>
           </form>
         </div>
@@ -921,6 +1144,7 @@ export default function AdminPage() {
             <SidebarTab id="about" label="About & Ecosystem" icon={Sparkles} count={subTeams.length + coreValues.length} />
             <SidebarTab id="legacy" label="Hall of Fame & Alumni" icon={Award} count={legacyHeads.length} />
             <SidebarTab id="news" label="News & PDF Gazette" icon={Newspaper} count={newsIssues.length} />
+            <SidebarTab id="subscribers" label="Subscribers & Mail" icon={Mail} count={subscribers.length} />
             <SidebarTab id="gallery" label="Gallery Moments" icon={ImageIcon} count={gallery.length} />
             <SidebarTab id="stats" label="Homepage Stats" icon={BarChart3} />
           </div>
@@ -1006,8 +1230,12 @@ export default function AdminPage() {
                   <div className="text-3xl font-black text-pink-400 mb-1">{gallery.length}</div>
                   <div className="text-xs font-bold uppercase text-slate-400">Gallery Photos</div>
                 </div>
-                <div onClick={() => setActiveTab("stats")} className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 hover:border-emerald-500/50 cursor-pointer transition-all hover:scale-[1.02]">
-                  <div className="text-3xl font-black text-emerald-400 mb-1">{stats.placementRate}</div>
+                <div onClick={() => setActiveTab("subscribers")} className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 hover:border-emerald-500/50 cursor-pointer transition-all hover:scale-[1.02]">
+                  <div className="text-3xl font-black text-emerald-400 mb-1">{subscribers.length}</div>
+                  <div className="text-xs font-bold uppercase text-slate-400">Subscribers</div>
+                </div>
+                <div onClick={() => setActiveTab("stats")} className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 hover:border-cyan-500/50 cursor-pointer transition-all hover:scale-[1.02]">
+                  <div className="text-3xl font-black text-cyan-400 mb-1">{stats.placementRate}</div>
                   <div className="text-xs font-bold uppercase text-slate-400">Placement Rate</div>
                 </div>
               </div>
@@ -1121,12 +1349,53 @@ export default function AdminPage() {
                             </select>
                             <span className="text-xs text-slate-400 font-mono">{ev.date} • {ev.time}</span>
                             <span className="text-xs text-slate-500">• {ev.location}</span>
+                            {ev.registrationUrl && ev.registrationUrl !== "#" ? (
+                              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-bold">
+                                🔗 Reg Link Active
+                              </span>
+                            ) : (
+                              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-500 border border-slate-700">
+                                No Link
+                              </span>
+                            )}
+                            {ev.isFeatured ? (
+                              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/30 font-bold flex items-center gap-1">
+                                ⭐ Featured
+                              </span>
+                            ) : null}
                           </div>
                           <h4 className="text-base font-bold text-white">{ev.title}</h4>
                           <p className="text-xs text-slate-400 line-clamp-1">{ev.description}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
+                        <button
+                          type="button"
+                          onClick={() => handleToggleEventFeatured(ev.id)}
+                          className={cn(
+                            "p-2 rounded-lg transition-all text-xs font-mono font-bold flex items-center gap-1 border",
+                            ev.isFeatured 
+                              ? "bg-amber-500/15 text-amber-300 border-amber-500/40 hover:bg-amber-500/25" 
+                              : "bg-slate-800/80 text-slate-400 border-slate-700 hover:text-amber-300 hover:border-amber-500/30"
+                          )}
+                          title="Toggle Featured Highlight on Homepage"
+                        >
+                          <Star className={cn("w-3.5 h-3.5", ev.isFeatured && "fill-amber-400 text-amber-400")} />
+                          <span className="hidden sm:inline">{ev.isFeatured ? "Featured" : "Feature"}</span>
+                        </button>
+
+                        {ev.registrationUrl && ev.registrationUrl !== "#" && (
+                          <a 
+                            href={ev.registrationUrl} 
+                            target="_blank" 
+                            rel="noreferrer" 
+                            className="p-2 hover:bg-slate-800 text-sky-400 hover:text-sky-300 rounded-lg transition-colors text-xs font-mono font-bold flex items-center gap-1"
+                            title="Test Registration Link"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                            <span className="hidden sm:inline">Test Link</span>
+                          </a>
+                        )}
                         <button onClick={() => openEventModal(ev)} className="p-2 hover:bg-slate-800 text-slate-300 hover:text-sky-400 rounded-lg transition-colors" title="Edit">
                           <Edit3 className="w-4 h-4" />
                         </button>
@@ -1158,8 +1427,8 @@ export default function AdminPage() {
                 </button>
               </div>
 
-              {/* Search & Role Filter Bar */}
-              <div className="flex flex-col sm:flex-row gap-3">
+              {/* Search, Role Tabs & Team Domain Filter Bar */}
+              <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
                 <div className="relative flex-1">
                   <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
                   <input
@@ -1170,23 +1439,46 @@ export default function AdminPage() {
                     className="w-full pl-9 pr-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-sky-500"
                   />
                 </div>
-                <div className="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800 shrink-0">
-                  {[
-                    { id: "all", label: "All Members" },
-                    { id: "executive", label: "Executive Board" },
-                    { id: "core", label: "Core Committee" }
-                  ].map((filter) => (
-                    <button
-                      key={filter.id}
-                      onClick={() => setTeamRoleFilter(filter.id)}
-                      className={cn(
-                        "px-3 py-1 rounded-lg text-xs font-bold transition-all",
-                        teamRoleFilter === filter.id ? "bg-sky-500 text-white" : "text-slate-400 hover:text-white"
-                      )}
+                
+                <div className="flex flex-wrap items-center gap-2">
+                  {/* Role Tabs */}
+                  <div className="flex flex-wrap items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 shrink-0">
+                    {[
+                      { id: "all", label: "All Members" },
+                      { id: "executive", label: "Executive Board" },
+                      { id: "core", label: "Core Committee" },
+                      { id: "members", label: "General Members" }
+                    ].map((filter) => (
+                      <button
+                        key={filter.id}
+                        type="button"
+                        onClick={() => setTeamRoleFilter(filter.id)}
+                        className={cn(
+                          "px-3 py-1 rounded-lg text-xs font-bold transition-all",
+                          teamRoleFilter === filter.id ? "bg-sky-500 text-white shadow" : "text-slate-400 hover:text-white"
+                        )}
+                      >
+                        {filter.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Team Domain Filter Dropdown */}
+                  <div className="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800 shrink-0">
+                    <span className="text-xs font-mono text-slate-400 font-bold">Domain:</span>
+                    <select
+                      value={teamDomainFilter}
+                      onChange={(e) => setTeamDomainFilter(e.target.value)}
+                      className="bg-slate-900 text-xs text-sky-400 font-bold px-2 py-1 rounded-lg border border-slate-800 focus:outline-none focus:border-sky-500 cursor-pointer"
                     >
-                      {filter.label}
-                    </button>
-                  ))}
+                      <option value="all">All Teams / Domains</option>
+                      <option value="technical">Technical Team</option>
+                      <option value="designing">Designing Team</option>
+                      <option value="content">Content Team</option>
+                      <option value="marketing">PR &amp; Marketing Team</option>
+                      <option value="photography">Photography Team</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
@@ -1194,34 +1486,69 @@ export default function AdminPage() {
                 {filteredTeam.length === 0 ? (
                   <div className="col-span-2 text-center py-12 text-slate-500 text-sm">No team members found matching your search.</div>
                 ) : (
-                  filteredTeam.map((member) => (
-                    <div key={member.id} className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-start justify-between gap-4 hover:border-slate-700 transition-all">
-                      <div className="flex items-center gap-3">
-                        <img src={member.image} alt={member.name} className="w-14 h-14 rounded-2xl object-cover border border-slate-700 shrink-0" />
-                        <div>
-                          <span className="text-[10px] font-mono uppercase text-sky-400 font-bold">{member.position}</span>
-                          <h4 className="text-base font-bold text-white">{member.name}</h4>
-                          <p className="text-xs text-slate-400 line-clamp-1">{member.bio || "Active contributor"}</p>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {member.skills.slice(0, 3).map((s, i) => (
-                              <span key={i} className="text-[9px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 border border-slate-700">{s}</span>
-                            ))}
+                  filteredTeam.map((member) => {
+                    const posUpper = (member.position || "").toUpperCase();
+                    const lvl = member.level || (
+                      posUpper.includes("PRESIDENT") ? (posUpper.includes("VICE") ? 2 : 1) :
+                      posUpper.includes("HEAD") ? (posUpper.includes("CO-HEAD") || posUpper.includes("CO HEAD") ? 4 : 3) : 5
+                    );
+
+                    const isExec = lvl === 1 || lvl === 2 || posUpper.includes("PRESIDENT");
+                    const isCoreLead = (lvl === 3 || lvl === 4 || posUpper.includes("HEAD") || posUpper.includes("CO-HEAD") || posUpper.includes("LEAD")) && !isExec;
+
+                    const tierLabel = isExec ? "👑 Executive" :
+                      isCoreLead ? "⭐ Core Lead" : "Member";
+
+                    const cardStyle = isExec 
+                      ? "bg-gradient-to-r from-purple-950/40 via-slate-900/90 to-slate-900/90 border-purple-500/40 shadow-lg shadow-purple-950/20" 
+                      : isCoreLead 
+                      ? "bg-gradient-to-r from-sky-950/40 via-slate-900/90 to-slate-900/90 border-sky-500/40 shadow-lg shadow-sky-950/20" 
+                      : "bg-slate-900/80 border-slate-800 hover:border-slate-700";
+
+                    const tierBadgeStyle = isExec 
+                      ? "bg-purple-500/20 text-purple-300 border-purple-500/40 font-extrabold" 
+                      : isCoreLead 
+                      ? "bg-sky-500/20 text-sky-300 border-sky-500/40 font-extrabold" 
+                      : "bg-slate-800 text-slate-400 border-slate-700 font-medium";
+
+                    return (
+                      <div key={member.id} className={cn("p-4 rounded-2xl border flex items-start justify-between gap-4 transition-all relative overflow-hidden", cardStyle)}>
+                        {/* Glow indicator bar for leaders */}
+                        {(isExec || isCoreLead) && (
+                          <div className={cn("absolute left-0 top-0 bottom-0 w-1", isExec ? "bg-purple-500" : "bg-sky-400")} />
+                        )}
+                        <div className="flex items-center gap-3">
+                          <img src={member.image} alt={member.name} className="w-14 h-14 rounded-2xl object-cover border border-slate-700 shrink-0" />
+                          <div>
+                            <div className="flex flex-wrap items-center gap-2 mb-0.5">
+                              <span className="text-[10px] font-mono uppercase text-sky-400 font-bold">{member.position}</span>
+                              <span className={cn("text-[9px] font-mono uppercase px-1.5 py-0.2 rounded border font-bold", tierBadgeStyle)}>
+                                {tierLabel}
+                              </span>
+                            </div>
+                            <h4 className="text-base font-bold text-white">{member.name}</h4>
+                            <p className="text-xs text-slate-400 line-clamp-1">{member.bio || "Active contributor"}</p>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {member.skills && member.skills.slice(0, 3).map((s, i) => (
+                                <span key={i} className="text-[9px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 border border-slate-700">{s}</span>
+                              ))}
+                            </div>
                           </div>
                         </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button onClick={() => handleDuplicateTeam(member)} className="p-2 hover:bg-slate-800 text-slate-400 hover:text-blue-400 rounded-lg transition-colors" title="Duplicate">
+                            <Copy className="w-3.5 h-3.5" />
+                          </button>
+                          <button onClick={() => openTeamModal(member)} className="p-2 hover:bg-slate-800 text-slate-300 hover:text-sky-400 rounded-lg transition-colors" title="Edit">
+                            <Edit3 className="w-3.5 h-3.5" />
+                          </button>
+                          <button onClick={() => handleDeleteTeam(member.id)} className="p-2 hover:bg-rose-500/10 text-slate-400 hover:text-rose-400 rounded-lg transition-colors" title="Delete">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <button onClick={() => handleDuplicateTeam(member)} className="p-2 hover:bg-slate-800 text-slate-400 hover:text-blue-400 rounded-lg transition-colors" title="Duplicate">
-                          <Copy className="w-3.5 h-3.5" />
-                        </button>
-                        <button onClick={() => openTeamModal(member)} className="p-2 hover:bg-slate-800 text-slate-300 hover:text-sky-400 rounded-lg transition-colors" title="Edit">
-                          <Edit3 className="w-3.5 h-3.5" />
-                        </button>
-                        <button onClick={() => handleDeleteTeam(member.id)} className="p-2 hover:bg-rose-500/10 text-slate-400 hover:text-rose-400 rounded-lg transition-colors" title="Delete">
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </div>
@@ -1476,6 +1803,99 @@ export default function AdminPage() {
             </div>
           )}
 
+          {/* 6.5. NEWSLETTER SUBSCRIBERS */}
+          {activeTab === "subscribers" && (
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-2xl font-extrabold text-white">Newsletter &amp; Subscribers Manager</h2>
+                  <p className="text-xs text-slate-400 mt-0.5">View, filter, and export students &amp; professionals subscribed to CSI Gazette.</p>
+                </div>
+                <button
+                  onClick={handleExportSubscribersCSV}
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white rounded-xl text-xs font-bold transition-all shadow-md shrink-0"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Export Subscribers (CSV)</span>
+                </button>
+              </div>
+
+              {/* Search Bar */}
+              <div className="relative">
+                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+                <input
+                  type="text"
+                  placeholder="Search subscribers by email address..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-sky-500 font-mono"
+                />
+              </div>
+
+              {/* Subscribers Table List */}
+              <div className="bg-slate-900/80 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+                <div className="p-4 bg-slate-950/60 border-b border-slate-800 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-sky-400" />
+                    <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-300">
+                      Subscribers Directory ({filteredSubscribers.length})
+                    </span>
+                  </div>
+                </div>
+
+                {filteredSubscribers.length === 0 ? (
+                  <div className="p-12 text-center text-slate-500">
+                    <Mail className="w-8 h-8 mx-auto mb-2 opacity-40 text-slate-400" />
+                    <p className="text-sm font-medium">No newsletter subscribers found matching your search.</p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-slate-800/80">
+                    {filteredSubscribers.map((sub, idx) => (
+                      <div key={sub.id || idx} className="p-4 flex items-center justify-between hover:bg-slate-800/30 transition-colors">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400 font-mono text-xs font-bold shrink-0">
+                            {idx + 1}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-semibold text-white font-mono">{sub.email}</span>
+                              <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-bold">
+                                Active
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-slate-400 font-mono mt-0.5">
+                              Subscribed: {sub.created_at ? new Date(sub.created_at).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "Recently"}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(sub.email);
+                              showToast(`Copied ${sub.email} to clipboard!`);
+                            }}
+                            className="p-2 hover:bg-slate-800 text-slate-400 hover:text-sky-400 rounded-lg transition-colors"
+                            title="Copy Email"
+                          >
+                            <Copy className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteSubscriber(sub.id || sub.email)}
+                            className="p-2 hover:bg-rose-500/10 text-slate-400 hover:text-rose-400 rounded-lg transition-colors"
+                            title="Remove Subscriber"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* 7. GALLERY MOMENTS */}
           {activeTab === "gallery" && (
             <div className="space-y-6">
@@ -1643,14 +2063,86 @@ export default function AdminPage() {
                   <label className="block text-xs font-mono uppercase text-slate-400 mb-1">Event Title</label>
                   <input type="text" required placeholder="e.g. Hackathon Decoded 2024" value={eventForm.title || ""} onChange={(e) => setEventForm({ ...eventForm, title: e.target.value })} className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm" />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Interactive Date Field with Calendar Picker */}
                   <div>
-                    <label className="block text-xs font-mono uppercase text-slate-400 mb-1">Date</label>
-                    <input type="text" placeholder="e.g. October 15, 2024" required value={eventForm.date || ""} onChange={(e) => setEventForm({ ...eventForm, date: e.target.value })} className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm" />
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-xs font-mono uppercase text-slate-400 flex items-center gap-1.5 font-bold">
+                        <CalendarIcon className="w-3.5 h-3.5 text-sky-400" />
+                        <span>Date</span>
+                      </label>
+                      <span className="text-[10px] text-slate-500 font-mono">Calendar Picker</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        type="date"
+                        className="bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-2 text-white text-xs cursor-pointer focus:border-sky-500 shrink-0 [color-scheme:dark]"
+                        onChange={(e) => {
+                          if (e.target.value) {
+                            const [year, month, day] = e.target.value.split('-');
+                            const d = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                            const formatted = d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+                            setEventForm({ ...eventForm, date: formatted });
+                          }
+                        }}
+                      />
+                      <input
+                        type="text"
+                        placeholder="e.g. September 15, 2026"
+                        required
+                        value={eventForm.date || ""}
+                        onChange={(e) => setEventForm({ ...eventForm, date: e.target.value })}
+                        className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:border-sky-500"
+                      />
+                    </div>
                   </div>
+
+                  {/* Interactive Time / Duration Field with Clock Picker & Presets */}
                   <div>
-                    <label className="block text-xs font-mono uppercase text-slate-400 mb-1">Time / Duration</label>
-                    <input type="text" placeholder="e.g. 10:00 AM (48 Hrs)" value={eventForm.time || ""} onChange={(e) => setEventForm({ ...eventForm, time: e.target.value })} className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm" />
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-xs font-mono uppercase text-slate-400 flex items-center gap-1.5 font-bold">
+                        <Clock className="w-3.5 h-3.5 text-sky-400" />
+                        <span>Time / Duration</span>
+                      </label>
+                      <span className="text-[10px] text-slate-500 font-mono">Clock &amp; Presets</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        type="time"
+                        className="bg-slate-950 border border-slate-700 rounded-xl px-2.5 py-2 text-white text-xs cursor-pointer focus:border-sky-500 shrink-0 [color-scheme:dark]"
+                        onChange={(e) => {
+                          if (e.target.value) {
+                            const [hStr, mStr] = e.target.value.split(':');
+                            let h = parseInt(hStr, 10);
+                            const ampm = h >= 12 ? "PM" : "AM";
+                            h = h % 12 || 12;
+                            const formattedH = h < 10 ? `0${h}` : `${h}`;
+                            const timeFormatted = `${formattedH}:${mStr} ${ampm}`;
+                            setEventForm({ ...eventForm, time: timeFormatted });
+                          }
+                        }}
+                      />
+                      <input
+                        type="text"
+                        placeholder="e.g. 10:00 AM (48 Hrs)"
+                        value={eventForm.time || ""}
+                        onChange={(e) => setEventForm({ ...eventForm, time: e.target.value })}
+                        className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:border-sky-500"
+                      />
+                    </div>
+                    {/* Quick Duration & Time Presets */}
+                    <div className="flex flex-wrap gap-1 mt-1.5">
+                      {["10:00 AM", "02:00 PM", "10:00 AM (Full Day)", "10:00 AM (24 Hrs)", "10:00 AM (48 Hrs)"].map((preset) => (
+                        <button
+                          key={preset}
+                          type="button"
+                          onClick={() => setEventForm({ ...eventForm, time: preset })}
+                          className="text-[9px] font-mono px-2 py-0.5 rounded bg-slate-950 text-slate-300 border border-slate-800 hover:border-sky-500 hover:text-sky-400 transition-colors"
+                        >
+                          + {preset}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -1668,21 +2160,63 @@ export default function AdminPage() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-mono uppercase text-slate-400 mb-1">Banner Image URL</label>
-                  <input type="text" placeholder="e.g. /images/... or https://..." value={eventForm.image || ""} onChange={(e) => setEventForm({ ...eventForm, image: e.target.value })} className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm" />
-                  {eventForm.image && (
-                    <div className="mt-2 rounded-xl overflow-hidden border border-slate-800 h-24 bg-black">
-                      <img src={eventForm.image} alt="Preview" className="w-full h-full object-cover" onError={(e) => { (e.target as any).style.display = 'none'; }} />
+                  <label className="block text-xs font-mono uppercase text-slate-400 mb-1 font-bold">
+                    Upload Banner Photo (JPG, PNG, WEBP)
+                  </label>
+                  <input 
+                    type="file" 
+                    accept="image/jpeg, image/png, image/webp, image/jpg"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files.length > 0) {
+                        const file = e.target.files[0];
+                        setEventSelectedFile(file);
+                        const localPreview = URL.createObjectURL(file);
+                        setEventForm({ ...eventForm, image: localPreview });
+                      }
+                    }} 
+                    className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-sky-500/20 file:text-sky-400 hover:file:bg-sky-500/30 cursor-pointer" 
+                  />
+                  {eventSelectedFile && (
+                    <div className="mt-1.5 text-xs text-sky-400 font-mono font-bold">
+                      Selected: {eventSelectedFile.name}
                     </div>
                   )}
+                  {/* Image Preview */}
+                  {eventForm.image && (
+                    <div className="mt-2 rounded-xl overflow-hidden border border-slate-800 h-28 bg-black relative">
+                      <img src={eventForm.image} alt="Banner Preview" className="w-full h-full object-cover object-top" onError={(e) => { (e.target as any).style.display = 'none'; }} />
+                      <div className="absolute top-2 left-2 bg-slate-900/80 backdrop-blur-md px-2 py-0.5 rounded text-[10px] text-slate-300 border border-slate-700 font-mono">
+                        Banner Preview
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-xs font-mono uppercase text-slate-400 mb-1 font-bold">Event Description</label>
+                  <textarea 
+                    rows={3} 
+                    placeholder="Provide detailed information about workshops, speakers, eligibility, prerequisites, and event goals..." 
+                    value={eventForm.description || ""} 
+                    onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })} 
+                    className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:border-sky-500 focus:outline-none" 
+                  />
                 </div>
                 <div>
                   <label className="block text-xs font-mono uppercase text-slate-400 mb-1">Registration Link (Optional)</label>
                   <input type="text" placeholder="https://forms.google.com/... or /events/..." value={eventForm.registrationUrl || ""} onChange={(e) => setEventForm({ ...eventForm, registrationUrl: e.target.value })} className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm" />
                 </div>
-                <div>
-                  <label className="block text-xs font-mono uppercase text-slate-400 mb-1">Description</label>
-                  <textarea rows={3} placeholder="Event overview, agenda, and guidelines" value={eventForm.description || ""} onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })} className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm" />
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-950 border border-slate-800">
+                  <input
+                    type="checkbox"
+                    id="isFeaturedToggle"
+                    checked={eventForm.isFeatured ?? true}
+                    onChange={(e) => setEventForm({ ...eventForm, isFeatured: e.target.checked })}
+                    className="w-4 h-4 rounded border-slate-700 bg-slate-900 text-sky-500 focus:ring-sky-500 cursor-pointer"
+                  />
+                  <label htmlFor="isFeaturedToggle" className="text-xs font-bold text-slate-200 cursor-pointer flex items-center gap-1.5">
+                    <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                    <span>Display as Featured Highlight on Homepage</span>
+                  </label>
                 </div>
                 <button type="submit" className="w-full py-3 bg-sky-500 hover:bg-sky-400 text-white font-bold rounded-xl text-sm transition-all shadow-md">Save Event</button>
               </form>

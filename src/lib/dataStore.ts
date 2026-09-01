@@ -16,6 +16,7 @@ export interface EventItem {
   image: string;
   description: string;
   registrationUrl?: string;
+  isFeatured?: boolean;
 }
 
 export interface TeamMemberItem {
@@ -64,6 +65,12 @@ export interface CoreValueItem {
   frontDesc: string;
   backDesc: string;
   points: string[];
+}
+
+export interface SubscriberItem {
+  id?: string;
+  email: string;
+  created_at?: string;
 }
 
 export interface NewsIssueItem {
@@ -256,267 +263,419 @@ export const defaultEvents: EventItem[] = [
     color: "orange",
     image: "/events/ethicalhacking.jpg.jpeg",
     description: "Ethical hacking contest with cash prizes for the top 3 participants.",
-    registrationUrl: ""
+    registrationUrl: "",
+    isFeatured: true
   }
 ];
 
 export const defaultTeam: TeamMemberItem[] = [
+  // L1 (President)
   { 
-    id: "team-1", 
+    id: "OP-01", 
+    level: 1,
     name: "Abhay Shanker Tiwari", 
-    position: "FOUNDER & CEO", 
+    position: "President", 
     image: "/team/abhay.jpg.jpeg", 
-    bio: "Visionary leader driving the club's mission to foster technological excellence and innovation.", 
+    bio: "Visionary leader driving the club's mission to foster technological excellence and innovation. | Tech Stack: C, C++, Python | Focus: Leadership & Tech Strategy", 
     skills: ["Leadership", "Vision", "Strategy"], 
-    socials: { linkedin: "https://linkedin.com", github: "https://github.com", email: "ceo@csisrmcem.org" } 
+    branch: "CSE",
+    socials: { linkedin: "https://www.linkedin.com/in/abhay-shanker-tiwari-0a8031213/", github: "https://github.com", email: "abhaylibra15@gmail.com" } 
   },
+  
+  // L2 (Vice President)
   { 
-    id: "team-2", 
+    id: "OP-02", 
+    level: 2,
+    name: "Vineet Pandey", 
+    position: "Vice President & PR Head", 
+    image: "/team/vineet.jpg.jpeg", 
+    bio: "Directing operations, business strategy, and public relations.", 
+    skills: ["Operations", "Strategy", "Marketing"], 
+    socials: { linkedin: "https://www.linkedin.com/in/vineet-pandey-83500a328/", github: "https://github.com" } 
+  },
+
+  // L3 (Heads)
+  { 
+    id: "OP-04", 
+    level: 3,
     name: "Abhishek Soni", 
-    position: "CO-FOUNDER & COO", 
+    position: "Technical Head", 
     image: "/team/abhishek.jpg.jpeg", 
-    bio: "Co-Founder & COO directing operations, business strategy, engineering workflows, and team execution.", 
-    skills: ["Operations", "Strategy", "Execution"], 
-    socials: { linkedin: "https://www.linkedin.com/in/abhishek-soni-06725326b/", github: "https://github.com/akaabhi2005", email: "abhishek@csisrmcem.org" } 
+    bio: "Leading the technical initiatives and core engineering projects. | Tech Stack: TypeScript, JavaScript, Python | Focus: Full Stack & Operations", 
+    skills: ["Engineering", "Architecture", "Leadership"], 
+    socials: { linkedin: "https://www.linkedin.com/in/abhishek-soni-06725326b/", github: "https://github.com/akaabhi2005" } 
   },
   { 
-    id: "team-3", 
-    name: "Mugdh Mohan", 
-    position: "WEB DOMAIN HEAD", 
-    image: "/team/mugdh.jpg.jpeg", 
-    bio: "Leading the web development domain, architecture, and frontend excellence.", 
-    skills: ["React", "Next.js", "Architecture"], 
-    branch: "IT",
-    socials: { linkedin: "https://linkedin.com" } 
+    id: "OP-03", 
+    level: 3,
+    name: "Asmi Tiwari", 
+    position: "Content Head", 
+    image: "/team/asmi.jpg.jpeg", 
+    bio: "Leading content strategy and creation for all club publications.", 
+    skills: ["Content", "Strategy", "Writing"], 
+    socials: { linkedin: "https://www.linkedin.com/in/asmi-tiwari-ba4602328/", github: "https://github.com" } 
   },
   { 
-    id: "team-4", 
-    name: "Supriya Singh", 
-    position: "WEB DOMAIN CO-HEAD", 
-    image: "/team/supriya.jpg.jpeg", 
-    bio: "Managing full-stack projects, mentorship, and web infrastructure.", 
-    skills: ["Node.js", "Backend", "Leadership"], 
-    branch: "IT",
-    socials: { linkedin: "https://linkedin.com" } 
+    id: "OP-06", 
+    level: 3,
+    name: "Jatin Pandey", 
+    position: "Designing Head", 
+    image: "/team/jatin.jpg.jpeg", 
+    bio: "Directing UI/UX design and overall visual aesthetic of the club.", 
+    skills: ["UI/UX", "Figma", "Design"], 
+    socials: { linkedin: "https://www.linkedin.com/in/jatin-pandey-a1654237a/", github: "https://github.com" } 
   },
   { 
-    id: "team-5", 
-    name: "Shriyansh Verma", 
-    position: "APP DOMAIN HEAD", 
-    image: "/team/shriyansh.jpg.jpeg", 
-    bio: "Guiding the mobile application development team using Flutter and React Native.", 
-    skills: ["Flutter", "Mobile", "UI/UX"], 
-    branch: "DS",
-    socials: { linkedin: "https://linkedin.com" } 
+    id: "OP-09", 
+    level: 3,
+    name: "Akshat Saxena", 
+    position: "Photography Head", 
+    image: "/team/akshat.jpg.jpeg", 
+    bio: "Capturing moments and managing our digital presence. | Tech Stack: Java, Python | Focus: Digital Arts & Media", 
+    skills: ["Photography", "Social Media", "Video"], 
+    socials: { linkedin: "https://www.linkedin.com/in/akshat-saxena-58267a251/", github: "https://github.com" } 
+  },
+
+  // L4 (Co-Heads)
+  { 
+    id: "OP-05", 
+    level: 4,
+    name: "Abhinav Singh", 
+    position: "Technical Co-head", 
+    image: "/team/abhinav.jpg.jpeg", 
+    bio: "Assisting in technical operations and mentoring junior developers. | Tech Stack: C, Java, Python, JS, TS | Focus: Web & App Dev, AI/ML", 
+    skills: ["Development", "Mentorship", "Cloud"], 
+    socials: { linkedin: "https://www.linkedin.com/in/abhinav-singh-a70542328/", github: "https://github.com" } 
   },
   { 
-    id: "team-6", 
-    name: "Priyanshi Jain", 
-    position: "DESIGN DOMAIN HEAD", 
-    image: "/team/priyanshi.jpg.jpeg", 
-    bio: "Spearheading the creative design, UI/UX, and branding initiatives of the club.", 
-    skills: ["Figma", "UI/UX", "Branding"], 
-    branch: "DS",
-    socials: { linkedin: "https://linkedin.com" } 
+    id: "OP-07", 
+    level: 4,
+    name: "Isha Gupta", 
+    position: "Designing Co-head", 
+    image: "/team/isha.jpg.jpeg", 
+    bio: "Collaborating on design systems and creative marketing assets.", 
+    skills: ["Creative", "Illustration", "UI"], 
+    socials: { linkedin: "https://www.linkedin.com/in/isha-gupta-741317304/", github: "https://github.com" } 
   },
   { 
-    id: "team-7", 
-    name: "Disha Yadav", 
-    position: "DESIGN DOMAIN CO-HEAD", 
-    image: "/team/disha.jpg.jpeg", 
-    bio: "Assisting in the club's digital aesthetics, illustrations, and event designs.", 
-    skills: ["Illustrator", "Visual Design"], 
-    branch: "DS",
-    socials: { linkedin: "https://linkedin.com" } 
+    id: "OP-08", 
+    level: 4,
+    name: "Ayush Pratap Singh", 
+    position: "PR & Marketing Co-head", 
+    image: "/team/ayush.jpg.jpeg", 
+    bio: "Executing marketing campaigns and managing public outreach. | Tech Stack: C, C++, Python | Focus: AI/ML, Web Dev", 
+    skills: ["Marketing", "Outreach", "Strategy"], 
+    socials: { linkedin: "https://www.linkedin.com/in/ayush-pratap-singh-648653319/", github: "https://github.com" } 
+  },
+
+  // L5 (Members)
+  // Technical Team
+  { 
+    id: "M-T0", 
+    level: 5,
+    domain: "technical",
+    name: "Dhruv Bajpai", 
+    position: "Technical Member", 
+    image: "/team/dhruvbajpai.jpg.jpg", 
+    bio: "Dedicated and adaptable developer exploring Python, C, HTML, Machine Learning, and Data Science. | Tech Stack: C, Python, HTML | Focus: AI/ML, Data Science", 
+    skills: ["Coding", "Web Dev"], 
+    branch: "CSE (DS)",
+    socials: { linkedin: "https://www.linkedin.com/in/dhruv-bajpai-4bba7b423" } 
   },
   { 
-    id: "team-8", 
-    name: "Naman Pandey", 
-    position: "DESIGN DOMAIN CO-HEAD", 
-    image: "/team/naman.jpg.jpeg", 
-    bio: "Co-leading graphic design operations for club events and social media presence.", 
-    skills: ["Photoshop", "Graphics", "Creative"], 
-    branch: "CSE",
-    socials: { linkedin: "https://linkedin.com" } 
-  },
-  { 
-    id: "team-9", 
-    name: "Nainsi Verma", 
-    position: "CONTENT DOMAIN HEAD", 
-    image: "/team/nainsi.jpg.jpeg", 
-    bio: "Leading content creation, technical writing, and communication strategies.", 
-    skills: ["Content Strategy", "Writing", "SEO"], 
-    branch: "DS",
-    socials: { linkedin: "https://linkedin.com" } 
-  },
-  { 
-    id: "team-10", 
-    name: "Aditi Mishra", 
-    position: "PR DOMAIN HEAD", 
-    image: "/team/aditi.jpg.jpeg", 
-    bio: "Managing public relations, outreach, and external communications.", 
-    skills: ["Public Relations", "Outreach", "Communication"], 
-    branch: "AL",
-    socials: { linkedin: "https://linkedin.com" } 
-  },
-  { 
-    id: "team-11", 
-    name: "Akhand Pande", 
-    position: "AI/ML DOMAIN HEAD", 
-    image: "/team/akhand.jpg.jpeg", 
-    bio: "Guiding research and development in Artificial Intelligence and Machine Learning.", 
-    skills: ["Python", "Machine Learning", "Data Science"], 
-    branch: "AL",
-    socials: { linkedin: "https://linkedin.com" } 
-  },
-  { 
-    id: "team-12", 
-    name: "Aniket Tiwari", 
-    position: "AI/ML DOMAIN CO-HEAD", 
-    image: "/team/aniket.jpg.jpeg", 
-    bio: "Assisting in model training, deep learning projects, and AI workshops.", 
-    skills: ["Deep Learning", "TensorFlow", "Neural Nets"], 
-    branch: "DS",
-    socials: { linkedin: "https://linkedin.com" } 
-  },
-  { 
-    id: "team-13", 
-    name: "Ayushman Pan", 
-    position: "CYBER DOMAIN HEAD", 
-    image: "/team/ayushman.jpg.jpeg", 
-    bio: "Leading the cybersecurity division, focusing on ethical hacking and network security.", 
-    skills: ["Security", "Ethical Hacking", "Networks"], 
-    branch: "DS",
-    socials: { linkedin: "https://linkedin.com" } 
-  },
-  { 
-    id: "team-14", 
-    name: "Satakshi Nigan", 
-    position: "CYBER DOMAIN CO-HEAD", 
-    image: "/team/satakshi.jpg.jpeg", 
-    bio: "Assisting in managing security infrastructure and organizing CTF events.", 
-    skills: ["CTF", "Security", "Analysis"], 
-    branch: "IoT",
-    socials: { linkedin: "https://linkedin.com" } 
-  },
-  { 
-    id: "team-15", 
-    name: "Pratik Sing", 
-    position: "DSA DOMAIN HEAD", 
-    image: "/team/pratik.jpg.jpeg", 
-    bio: "Leading competitive programming sessions and data structures training.", 
-    skills: ["Algorithms", "C++", "Competitive Programming"], 
-    branch: "DS",
-    socials: { linkedin: "https://linkedin.com" } 
-  },
-  { 
-    id: "team-16", 
-    name: "Ranjeet Kumar", 
-    position: "DSA DOMAIN CO-HEAD", 
-    image: "/team/ranjeet.jpg.jpeg", 
-    bio: "Co-leading algorithm practice, problem solving, and LeetCode workshops.", 
-    skills: ["Problem Solving", "Data Structures", "Java"], 
-    branch: "AL",
-    socials: { linkedin: "https://linkedin.com" } 
-  },
-  { 
-    id: "team-17", 
-    name: "Mahi Shukla", 
-    position: "MARKETING DOMAIN HEAD", 
-    image: "/team/mahi.jpg.jpeg", 
-    bio: "Overseeing digital marketing, campaigns, and audience engagement.", 
-    skills: ["Marketing", "Campaigns", "Strategy"], 
-    branch: "DS",
-    socials: { linkedin: "https://linkedin.com" } 
-  },
-  { 
-    id: "team-18", 
-    name: "Arushi Tiwari", 
-    position: "MARKETING DOMAIN CO-HEAD", 
-    image: "/team/arushi.jpg.jpeg", 
-    bio: "Co-leading social media promotions and event marketing strategies.", 
-    skills: ["Social Media", "Promotions", "Engagement"], 
-    branch: "IT",
-    socials: { linkedin: "https://linkedin.com" } 
-  },
-  { 
-    id: "team-19", 
-    name: "Anjali Yadav", 
-    position: "SOCIAL MEDIA HEAD", 
-    image: "/team/anjali.jpg.jpeg", 
-    bio: "Managing the club's online presence across all social media platforms.", 
-    skills: ["Social Media", "Community", "Engagement"], 
-    branch: "AL",
-    socials: { linkedin: "https://linkedin.com" } 
-  },
-  { 
-    id: "team-20", 
-    name: "Aadya Srivasta", 
-    position: "MANAGEMENT HEAD", 
-    image: "/team/aadya.jpg.jpeg", 
-    bio: "Leading event logistics, team coordination, and overall operations management.", 
-    skills: ["Logistics", "Operations", "Coordination"], 
-    branch: "CSE",
-    socials: { linkedin: "https://linkedin.com" } 
-  },
-  { 
-    id: "team-21", 
-    name: "Naina misra", 
-    position: "MANAGEMENT CO-HEAD", 
+    id: "M-T1", 
+    level: 5,
+    domain: "technical",
+    name: "Naina Misra", 
+    position: "Technical Member", 
     image: "/team/naina.jpg.jpeg", 
-    bio: "Assisting in managing club resources, event planning, and execution.", 
-    skills: ["Event Planning", "Resource Management", "Execution"], 
+    bio: "Computer science student passionate about coding, data structures and algorithms, and applied machine learning. | Tech Stack: C++, Python | Focus: Software Dev, DSA", 
+    skills: ["Coding", "Web Dev"], 
     branch: "CSE",
-    socials: { linkedin: "https://linkedin.com" } 
+    socials: { linkedin: "https://www.linkedin.com/in/naina-misra-598637344" } 
   },
   { 
-    id: "team-22", 
-    name: "Rajat Tripathi", 
-    position: "TECHNICAL HEAD", 
-    image: "/team/rajat.jpg.jpeg", 
-    bio: "Overseeing technical infrastructure, server deployments, and cloud operations.", 
-    skills: ["DevOps", "Cloud", "Infrastructure"], 
-    branch: "AL",
-    socials: { linkedin: "https://linkedin.com" } 
-  },
-  { 
-    id: "team-23", 
-    name: "Vashu Gupta", 
-    position: "TECHNICAL CO-HEAD", 
-    image: "/team/vashu.jpg.jpeg", 
-    bio: "Assisting in technical problem solving and maintaining project repositories.", 
-    skills: ["Git", "Backend", "Technical Support"], 
-    branch: "CSE",
-    socials: { linkedin: "https://linkedin.com" } 
-  },
-  { 
-    id: "team-24", 
-    name: "Vaishnavi Bajp", 
-    position: "SPONSORSHIP HEAD", 
+    id: "M-T2", 
+    level: 5,
+    domain: "technical",
+    name: "Vaishnavi Bajpai", 
+    position: "Technical Member", 
     image: "/team/vaishnavi.jpg.jpeg", 
-    bio: "Leading outreach efforts to secure sponsorships and industry partnerships.", 
-    skills: ["Sponsorship", "Negotiation", "Partnerships"], 
+    bio: "Interested in exploring new ideas and problem solving. Passionate about coding in C, Python, and JavaScript. | Tech Stack: C, Python, JavaScript | Focus: Data Science, DSA", 
+    skills: ["Coding", "Web Dev"], 
     branch: "DS",
-    socials: { linkedin: "https://linkedin.com" } 
+    socials: { linkedin: "https://www.linkedin.com/in/vaishnavi-bajpai-b7a03b383" } 
   },
   { 
-    id: "team-25", 
-    name: "Prashant Jaisw", 
-    position: "SPONSORSHIP CO-HEAD", 
+    id: "M-T3", 
+    level: 5,
+    domain: "technical",
+    name: "Aniket Tiwari", 
+    position: "Technical Member", 
+    image: "/team/aniket.jpg.jpg", 
+    bio: "B.Tech Data Science student passionate about technology, AI, robotics, drones, and building innovative solutions. | Tech Stack: C, Python, JavaScript | Focus: Web Dev, AI/ML, DSA", 
+    skills: ["Coding", "Web Dev"], 
+    branch: "DS",
+    socials: { linkedin: "https://www.linkedin.com/in/aniket-tiwari-704566383" } 
+  },
+  { 
+    id: "M-T4", 
+    level: 5,
+    domain: "technical",
+    name: "Shriyansh Verma", 
+    position: "Technical Member", 
+    image: "/team/shriyansh.jpg.jpeg", 
+    bio: "Passionate about technology, programming, and problem-solving. Enjoys learning new technologies and building innovative projects. | Tech Stack: C, Python, JavaScript | Focus: Web & Software Dev, DSA", 
+    skills: ["Coding", "Web Dev"], 
+    branch: "DS",
+    socials: { linkedin: "https://www.linkedin.com/in/shriyansh-verma-849a72365" } 
+  },
+  { 
+    id: "M-T5", 
+    level: 5,
+    domain: "technical",
+    name: "Prashant Jaisawal", 
+    position: "Technical Member", 
     image: "/team/prashant.jpg.jpeg", 
-    bio: "Assisting in pitching to potential sponsors and managing financial relations.", 
-    skills: ["Pitching", "Finance", "Relations"], 
+    bio: "Aspiring AI/ML engineer passionate about exploring tech world and building impactful applications. | Tech Stack: Python | Focus: AI / Machine Learning", 
+    skills: ["Coding", "Web Dev"], 
     branch: "AIML",
-    socials: { linkedin: "https://linkedin.com" } 
+    socials: { linkedin: "https://www.linkedin.com/in/prashant-jaiswal-889ab4291" } 
   },
   { 
-    id: "team-26", 
-    name: "Aditya maddesiya", 
-    position: "VIDEO EDITING HEAD", 
-    image: "/team/aditya.jpg.jpeg", 
-    bio: "Leading video production, editing, and multimedia content creation.", 
-    skills: ["Premiere Pro", "Video Editing", "Multimedia"], 
-    branch: "",
+    id: "M-T6", 
+    level: 5,
+    domain: "technical",
+    name: "Aditya Maddheshiya", 
+    position: "Technical Member", 
+    image: "/team/adityamaddheshiya.jpg.jpeg", 
+    bio: "2nd-year B.Tech student passionate about Android and Web Development, building user-friendly applications. | Tech Stack: C, Java, Python | Focus: Web & App Dev", 
+    skills: ["Coding", "Web Dev"], 
+    branch: "CSE",
+    socials: { linkedin: "https://www.linkedin.com/in/aditya-maddheshiya-717358432" } 
+  },
+  { 
+    id: "M-T7", 
+    level: 5,
+    domain: "technical",
+    name: "Vashu Gupta", 
+    position: "Technical Member", 
+    image: "/team/vashu.jpg.jpeg", 
+    bio: "Aspiring software developer with foundation in C, C++, Python, Java, SQL, HTML, CSS, and JS, actively building skills in DSA. | Tech Stack: C++, Python, SQL, JS | Focus: Web & Software Dev", 
+    skills: ["Coding", "Web Dev"], 
+    branch: "CSE",
+    socials: { linkedin: "https://www.linkedin.com/in/vashu-gupta-786064286" } 
+  },
+
+  // Content Team
+  { 
+    id: "M-C1", 
+    level: 5,
+    domain: "content",
+    name: "Mugdh Tripathi", 
+    position: "Content Member", 
+    image: "/team/mugdh.jpg.jpeg", 
+    bio: "Aspiring Tech Developer & Innovation Enthusiast skilled in HTML, CSS, JavaScript, Python, MySQL & RDBMS. | Tech Stack: C, Python, JavaScript | Focus: Web Development & DSA", 
+    skills: ["Writing", "Editing"], 
+    branch: "IT",
+    socials: { linkedin: "https://www.linkedin.com/in/mugdh-tripathi-9728b1381" } 
+  },
+  { 
+    id: "M-C2", 
+    level: 5,
+    domain: "content",
+    name: "Ayushman", 
+    position: "Content Member", 
+    image: "/team/ayushmanpandey.jpg.jpg", 
+    bio: "B.Tech student interested in programming, AI, competitive coding, cybersecurity, and data structures. | Tech Stack: C++ | Focus: DSA, AI, Problem Solving", 
+    skills: ["Writing", "Editing"], 
+    branch: "DS",
+    socials: { linkedin: "https://www.linkedin.com/in/ayushman-pandey-aa3181367" } 
+  },
+  { 
+    id: "M-C3", 
+    level: 5,
+    domain: "content",
+    name: "Satakshi Nigam", 
+    position: "Content Member", 
+    image: "/team/sarakshi.jpg.jpg", 
+    bio: "Curious and enthusiastic learner with strong interest in technology, content creation, and creative problem-solving. | Tech Stack: Java, Python | Focus: Web Dev, Content Creation", 
+    skills: ["Writing", "Editing"], 
+    branch: "IoT",
+    socials: { linkedin: "https://www.linkedin.com/in/satakshi-nigam-a03214315" } 
+  },
+  { 
+    id: "M-C4", 
+    level: 5,
+    domain: "content",
+    name: "Supriya Singh", 
+    position: "Content Member", 
+    image: "/team/supriya.jpg.jpg", 
+    bio: "B.Tech IT student passionate about exploring new technologies, coding, web development, and collaborative problem-solving. | Tech Stack: C, Python | Focus: Web Development, Software Dev", 
+    skills: ["Writing", "Editing"], 
+    branch: "IT",
+    socials: { linkedin: "https://www.linkedin.com/in/supriya-singh-216379397" } 
+  },
+  { 
+    id: "M-C5", 
+    level: 5,
+    domain: "content",
+    name: "Priya Keshari", 
+    position: "Content Member", 
+    image: "/team/priya.jpg.jpg", 
+    bio: "Passionate about discovering new ideas, technological innovation, and technical content creation. | Tech Stack: Python | Focus: AI/ML, Content Writing", 
+    skills: ["Writing", "Editing"], 
+    branch: "IT",
+    socials: { linkedin: "https://www.linkedin.com/in/priya-keshari-273675363" } 
+  },
+  { 
+    id: "M-C6", 
+    level: 5,
+    domain: "content",
+    name: "Naisni", 
+    position: "Content Member", 
+    image: "/team/naisni.jpg.jpeg", 
+    bio: "Creative writer and communicator passionate about tech literature and content design.", 
+    skills: ["Writing", "Editing"], 
+    branch: "CSE",
+    socials: { linkedin: "https://linkedin.com" } 
+  },
+
+  // Photography & Social Media
+  { 
+    id: "M-P1", 
+    level: 5,
+    domain: "photo",
+    name: "Ayan Kanojiya", 
+    position: "Photography Member", 
+    image: "/team/ayan.jpg.jpg", 
+    bio: "Aesthetic photographer, videography expert, and content creator interested in web technologies and data science. | Tech Stack: Python, HTML, MySQL | Focus: Data Science, Videography", 
+    skills: ["Photography", "Socials"], 
+    branch: "CSE (DS)",
+    socials: { linkedin: "https://www.linkedin.com/in/ayan-knj-644196396" } 
+  },
+  { 
+    id: "M-P2", 
+    level: 5,
+    domain: "photo",
+    name: "Pratik Singh", 
+    position: "Photography Member", 
+    image: "/team/pratik.jpg.jpg", 
+    bio: "Interested in web development, backend engineering, competitive coding, and building useful projects. | Tech Stack: C, C++, Java, JavaScript, HTML | Focus: Web Dev, Backend", 
+    skills: ["Photography", "Socials"], 
+    branch: "DS",
+    socials: { linkedin: "https://www.linkedin.com/in/pratik-singh-876471432" } 
+  },
+  { 
+    id: "M-P4", 
+    level: 5,
+    domain: "photo",
+    name: "Arya Singh", 
+    position: "Photography Member", 
+    image: "/team/arya.jpg.jpg", 
+    bio: "Hardworking and dedicated person interested in technical field (coding, AI) and capturing memories through photography. | Tech Stack: C, Python | Focus: AI/ML, Data Science", 
+    skills: ["Photography", "Socials"], 
+    branch: "CSE (DS)",
+    socials: { linkedin: "https://www.linkedin.com/in/arya-singh-156351432" } 
+  },
+
+  // Design Team
+  { 
+    id: "M-D1", 
+    level: 5,
+    domain: "design",
+    name: "Priyanshi Jain", 
+    position: "Designing Member", 
+    image: "/team/priyanshi.jpg", 
+    bio: "2nd-year B.Tech CSE (DS) student aspiring to build a career as a Data Scientist. Passionate about coding, new tech, and UI/UX. | Tech Stack: Python | Focus: AI/ML, Data Science, UI/UX", 
+    skills: ["UI/UX", "Figma"], 
+    branch: "DS",
+    socials: { linkedin: "https://www.linkedin.com/in/priyanshi-jain-544ab0366" } 
+  },
+  { 
+    id: "M-D2", 
+    level: 5,
+    domain: "design",
+    name: "Disha Yadav", 
+    position: "Designing Member", 
+    image: "/team/dishayadav.jpg.jpeg", 
+    bio: "Passionate and curious learner who loves exploring technology, web development, data science, and UI/UX design. | Tech Stack: Python | Focus: Web Dev, Data Science, UI/UX", 
+    skills: ["UI/UX", "Figma"], 
+    branch: "DS",
+    socials: { linkedin: "https://www.linkedin.com/in/disha-yadav-523083380" } 
+  },
+  { 
+    id: "M-D3", 
+    level: 5,
+    domain: "design",
+    name: "Naman Pandey", 
+    position: "Designing Member", 
+    image: "/team/naman.jpg.jpeg", 
+    bio: "Interested in web development, UI/UX design, and Hackathons. | Tech Stack: C, Java, Python | Focus: Web Dev, DSA, UI/UX Design", 
+    skills: ["UI/UX", "Figma"], 
+    branch: "CSE",
+    socials: { linkedin: "https://www.linkedin.com/in/naman-pandey-461a97380" } 
+  },
+  { 
+    id: "M-D4", 
+    level: 5,
+    domain: "design",
+    name: "Akhand Pande", 
+    position: "Designing Member", 
+    image: "/team/akhand.jpg.jpeg", 
+    bio: "Interested in Artificial Intelligence, Machine Learning, AI tools, web development, and cloud computing. | Tech Stack: C, C++, Python, HTML/CSS | Focus: AI/ML, Web Dev, Cloud", 
+    skills: ["UI/UX", "Figma"], 
+    branch: "AL",
+    socials: { linkedin: "https://www.linkedin.com/in/akhand-pandey-528bab382" } 
+  },
+
+  // PR & Marketing
+  { 
+    id: "M-PR1", 
+    level: 5,
+    domain: "pr",
+    name: "Mahi Shukla", 
+    position: "PR Member", 
+    image: "/team/mahishukla.jpg.png", 
+    bio: "B.Tech 2nd year student passionate to learn new tech skills, data science, and marketing campaigns. | Tech Stack: Python | Focus: Data Science, Marketing Strategy", 
+    skills: ["Marketing", "PR"], 
+    branch: "DS",
+    socials: { linkedin: "https://www.linkedin.com/in/mahi-shukla-1152613aa" } 
+  },
+  { 
+    id: "M-PR3", 
+    level: 5,
+    domain: "pr",
+    name: "Arushi Tiwari", 
+    position: "PR Member", 
+    image: "/team/arushi.jpg.jpeg", 
+    bio: "Hardworking and enthusiastic student passionate about learning new things, programming, and personal development. | Tech Stack: C, Python | Focus: AI/ML, Event Marketing", 
+    skills: ["Marketing", "PR"], 
+    branch: "IT",
+    socials: { linkedin: "https://www.linkedin.com/in/arushi-tiwari" } 
+  },
+  { 
+    id: "M-PR4", 
+    level: 5,
+    domain: "pr",
+    name: "Aditi Mishra", 
+    position: "PR Member", 
+    image: "/team/aditimishra.jpg.jpg", 
+    bio: "Deeply interested in AI, ML, and emerging technologies with a passion for learning and building innovative projects. | Tech Stack: C, Python | Focus: AI/ML, DSA", 
+    skills: ["Marketing", "PR"], 
+    branch: "AL",
+    socials: { linkedin: "https://www.linkedin.com/in/aditi-mishra-928117385" } 
+  },
+  { 
+    id: "M-PR7", 
+    level: 5,
+    domain: "pr",
+    name: "Pankaj Kumar", 
+    position: "PR Member", 
+    image: "/team/pankajkumar.jpg.jpeg", 
+    bio: "Active in student relations, event promotion, and strategic community management.", 
+    skills: ["Marketing", "PR"], 
+    branch: "CSE",
     socials: { linkedin: "https://linkedin.com" } 
   }
 ];
@@ -528,7 +687,7 @@ export const defaultLegacyHeads: LegacyHeadItem[] = [
     role: "Lead (AIML)",
     tenure: "2023-Present",
     placedAt: "TBA",
-    image: "/team/shraddha.jpg",
+    image: "/team/shraddha.jpg.png",
     bio: "Lead at CSI SRMCEM. Driving technical excellence in Artificial Intelligence and Machine Learning.",
     highlight: "AIML Leadership"
   },
@@ -538,19 +697,9 @@ export const defaultLegacyHeads: LegacyHeadItem[] = [
     role: "Chapter Lead",
     tenure: "2024-2025",
     placedAt: "Josh Technology Group",
-    image: "/team/aastha.jpg",
+    image: "/team/aastha.jpg.png",
     bio: "Former Chapter Lead at CSI SRMCEM. Currently working as a Software Quality Analyst at Josh Technology Group.",
     highlight: "SQA @ Josh Technology"
-  },
-  {
-    id: "legacy-3",
-    name: "Hall of Fame 3",
-    role: "President",
-    tenure: "2020-2021",
-    placedAt: "TBA",
-    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=400&h=400",
-    bio: "Details pending...",
-    highlight: "Management"
   }
 ];
 
@@ -772,30 +921,99 @@ async function fetchFromSupabase<T>(table: string, fallback: T[]): Promise<T[]> 
 // Helper: Save to Supabase
 async function saveToSupabase<T extends { id: string }>(table: string, items: T[]): Promise<void> {
   try {
-    // Delete existing rows to ensure clean upsert (if deleting is needed), 
-    // but upsert should overwrite by ID. We use upsert.
-    const { error } = await supabase.from(table).upsert(items);
-    if (error) throw error;
+    const { data: currentData } = await supabase.from(table).select('id');
+    if (currentData) {
+      const newIds = new Set(items.map(i => i.id));
+      const idsToDelete = currentData.map(c => c.id).filter(id => !newIds.has(id));
+      if (idsToDelete.length > 0) {
+        await supabase.from(table).delete().in('id', idsToDelete);
+      }
+    }
+    if (items.length > 0) {
+      const { error } = await supabase.from(table).upsert(items);
+      if (error) throw error;
+    }
     if (typeof window !== "undefined") {
       window.dispatchEvent(new Event("csi_data_updated"));
     }
-  } catch (error) {
-    console.error(`Error saving to ${table}:`, error);
+  } catch (error: any) {
+    console.error(`Error saving to ${table}:`, error?.message || error?.details || JSON.stringify(error));
   }
 }
 
 // Public CMS Getters & Setters
 export const DataStore = {
   // Events
-  getEvents: async (): Promise<EventItem[]> => await fetchFromSupabase('events', defaultEvents),
-  saveEvents: async (data: EventItem[]) => await saveToSupabase('events', data),
+  getEvents: async (): Promise<EventItem[]> => {
+    const fetched = await fetchFromSupabase<EventItem>('events', defaultEvents);
+    const mergedMap = new Map<string, EventItem>();
+    
+    // First populate defaults
+    defaultEvents.forEach(item => mergedMap.set(item.id, item));
+    
+    // Override with fetched records, preserving local image paths if fetched contains missing/unsplash links
+    fetched.forEach(item => {
+      const def = mergedMap.get(item.id);
+      if (def) {
+        mergedMap.set(item.id, {
+          ...def,
+          ...item,
+          image: (item.image && !item.image.includes('unsplash.com')) ? item.image : def.image,
+          isFeatured: item.isFeatured ?? (item.category === "upcoming" || item.category === "current")
+        });
+      } else {
+        mergedMap.set(item.id, {
+          ...item,
+          isFeatured: item.isFeatured ?? (item.category === "upcoming" || item.category === "current")
+        });
+      }
+    });
+
+    return Array.from(mergedMap.values());
+  },
+  saveEvents: async (data: EventItem[]) => {
+    const cleaned = data.map(({ isFeatured, ...rest }) => rest);
+    await saveToSupabase('events', cleaned);
+  },
 
   // Team
-  getTeam: async (): Promise<TeamMemberItem[]> => await fetchFromSupabase('team', defaultTeam),
+  getTeam: async (): Promise<TeamMemberItem[]> => {
+    const fetched = await fetchFromSupabase('team', defaultTeam);
+    // Combine fetched records with defaultTeam to ensure new members and updated image paths are preserved
+    const mergedMap = new Map<string, TeamMemberItem>();
+    
+    // First populate defaults
+    defaultTeam.forEach(item => mergedMap.set(item.id, item));
+    
+    // Override with fetched records, keeping updated local images if fetched contains placeholder or outdated links
+    fetched.forEach(item => {
+      const def = mergedMap.get(item.id);
+      if (def) {
+        mergedMap.set(item.id, {
+          ...def,
+          ...item,
+          image: (item.image && !item.image.includes('unsplash.com')) ? item.image : def.image
+        });
+      } else {
+        mergedMap.set(item.id, item);
+      }
+    });
+
+    return Array.from(mergedMap.values());
+  },
   saveTeam: async (data: TeamMemberItem[]) => await saveToSupabase('team', data),
 
   // Legacy Heads
-  getLegacyHeads: async (): Promise<LegacyHeadItem[]> => await fetchFromSupabase('legacy_heads', defaultLegacyHeads),
+  getLegacyHeads: async (): Promise<LegacyHeadItem[]> => {
+    const fetched = await fetchFromSupabase('legacy_heads', defaultLegacyHeads);
+    return fetched.map(item => {
+      const def = defaultLegacyHeads.find(d => d.id === item.id);
+      return {
+        ...item,
+        image: (item.image && !item.image.includes('unsplash.com')) ? item.image : (def?.image || item.image)
+      };
+    });
+  },
   saveLegacyHeads: async (data: LegacyHeadItem[]) => await saveToSupabase('legacy_heads', data),
 
   // Sub-Teams
@@ -848,8 +1066,9 @@ export const DataStore = {
 
   // Admin Password
   getAdminPassword: (): string => {
-    if (typeof window === "undefined") return "admin123";
-    return localStorage.getItem("csi_cms_admin_pwd") || "admin123";
+    const defaultSecret = process.env.NEXT_PUBLIC_ADMIN_SECRET || "csidcoders2024";
+    if (typeof window === "undefined") return defaultSecret;
+    return localStorage.getItem("csi_cms_admin_pwd") || defaultSecret;
   },
   saveAdminPassword: (pwd: string) => {
     if (typeof window === "undefined") return;
@@ -886,6 +1105,65 @@ export const DataStore = {
       console.error("Failed to import backup", e);
       return false;
     }
+  },
+
+  // Add Newsletter Subscriber
+  addSubscriber: async (email: string): Promise<boolean> => {
+    try {
+      const { error } = await supabase.from("subscribers").insert([{ email, created_at: new Date().toISOString() }]);
+      if (error && error.code !== "PGRST204") {
+        console.warn("Supabase subscriber save notice:", error.message);
+      }
+      if (typeof window !== "undefined") {
+        const stored = JSON.parse(localStorage.getItem("csi_subscribers") || "[]");
+        if (!stored.includes(email)) {
+          stored.push(email);
+          localStorage.setItem("csi_subscribers", JSON.stringify(stored));
+        }
+      }
+      return true;
+    } catch (err: any) {
+      console.warn("Subscriber save fallback:", err?.message || err);
+      return true;
+    }
+  },
+
+  // Get Newsletter Subscribers
+  getSubscribers: async (): Promise<SubscriberItem[]> => {
+    try {
+      const { data, error } = await supabase.from("subscribers").select("*").order("created_at", { ascending: false });
+      if (!error && data && data.length > 0) {
+        return data as SubscriberItem[];
+      }
+    } catch (err) {
+      console.warn("Fetch subscribers notice:", err);
+    }
+    // Fallback to local storage
+    if (typeof window !== "undefined") {
+      const stored: string[] = JSON.parse(localStorage.getItem("csi_subscribers") || "[]");
+      if (stored.length > 0) {
+        return stored.map((email, idx) => ({ id: `sub-local-${idx}`, email, created_at: new Date().toISOString() }));
+      }
+    }
+    return [
+      { id: "sub-1", email: "student.tech@srmcem.ac.in", created_at: "2024-10-01T10:00:00Z" },
+      { id: "sub-2", email: "code.enthusiast@gmail.com", created_at: "2024-10-05T14:30:00Z" }
+    ];
+  },
+
+  // Delete Subscriber
+  deleteSubscriber: async (emailOrId: string): Promise<boolean> => {
+    try {
+      await supabase.from("subscribers").delete().or(`id.eq.${emailOrId},email.eq.${emailOrId}`);
+    } catch (err) {
+      console.warn("Delete subscriber notice:", err);
+    }
+    if (typeof window !== "undefined") {
+      const stored: string[] = JSON.parse(localStorage.getItem("csi_subscribers") || "[]");
+      const updated = stored.filter(e => e !== emailOrId);
+      localStorage.setItem("csi_subscribers", JSON.stringify(updated));
+    }
+    return true;
   },
 
   // Reset Everything to Official Defaults

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -8,6 +8,7 @@ import { Menu, X, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeSwitcher } from "@/components/ui/ThemeSwitcher";
 import { useTheme } from "@/lib/themeContext";
+import { DataStore, EventItem } from "@/lib/dataStore";
 
 const links = [
   { name: "Home", href: "/" },
@@ -20,10 +21,27 @@ const links = [
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [featuredEvents, setFeaturedEvents] = useState<EventItem[]>([]);
   const pathname = usePathname();
   const { config } = useTheme();
 
   const toggleMenu = () => setIsOpen(!isOpen);
+
+  const loadNavbarEvents = async () => {
+    try {
+      const allEvents = await DataStore.getEvents();
+      const featured = allEvents.filter(e => e.isFeatured || e.category === "upcoming" || e.category === "current");
+      setFeaturedEvents(featured.length > 0 ? featured.slice(0, 2) : allEvents.slice(0, 2));
+    } catch (err) {
+      console.error("Error loading navbar events:", err);
+    }
+  };
+
+  useEffect(() => {
+    loadNavbarEvents();
+    window.addEventListener("csi_data_updated", loadNavbarEvents);
+    return () => window.removeEventListener("csi_data_updated", loadNavbarEvents);
+  }, []);
 
   return (
     <>
@@ -135,39 +153,57 @@ export function Navbar() {
                 })}
               </div>
 
-              {/* Right Side: Featured Cards inside Menu */}
+              {/* Right Side: Dynamic Featured Cards inside Menu */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ delay: 0.3, duration: 0.5 }}
-                className="hidden md:flex flex-col justify-center space-y-4"
+                className="hidden md:flex flex-col justify-center space-y-4 max-w-sm"
               >
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-white font-bold text-lg">Featured Highlights</span>
+                  <Link href="/events" onClick={() => setIsOpen(false)} className="text-xs text-sky-400 hover:underline">
+                    View All &rarr;
+                  </Link>
                 </div>
                 
-                {/* Event 1 */}
-                <Link href="/events" onClick={() => setIsOpen(false)} className="bg-slate-900/80 border border-slate-800 p-5 rounded-2xl shadow-xl relative overflow-hidden group cursor-pointer hover:border-sky-500/50 transition-all duration-300 block">
-                  <div className="absolute inset-0 bg-sky-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  <span className="px-2.5 py-0.5 bg-sky-500/20 text-sky-400 text-[10px] font-bold rounded-full uppercase tracking-wider mb-2 inline-block border border-sky-500/30">Upcoming</span>
-                  <h3 className="text-lg font-bold text-white mb-1">Hackathon Decoded</h3>
-                  <p className="text-slate-400 text-xs mb-3">Registrations are open for our 48-hour flagship coding marathon.</p>
-                  <span className="text-xs font-semibold text-sky-400 group-hover:text-sky-300 transition-colors">
-                    Explore Details &rarr;
-                  </span>
-                </Link>
-
-                {/* Event 2 */}
-                <Link href="/events" onClick={() => setIsOpen(false)} className="bg-slate-900/80 border border-slate-800 p-5 rounded-2xl shadow-xl relative overflow-hidden group cursor-pointer hover:border-blue-500/50 transition-all duration-300 block">
-                  <div className="absolute inset-0 bg-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  <span className="px-2.5 py-0.5 bg-blue-500/20 text-blue-400 text-[10px] font-bold rounded-full uppercase tracking-wider mb-2 inline-block border border-blue-500/30">Workshop</span>
-                  <h3 className="text-lg font-bold text-white mb-1">AI & Web3 Bootcamp</h3>
-                  <p className="text-slate-400 text-xs mb-3">Hands-on architecture, neural networks, and modern cloud deployment.</p>
-                  <span className="text-xs font-semibold text-blue-400 group-hover:text-blue-300 transition-colors">
-                    Learn More &rarr;
-                  </span>
-                </Link>
+                {featuredEvents.length > 0 ? (
+                  featuredEvents.map((event) => (
+                    <Link 
+                      key={event.id}
+                      href="/events" 
+                      onClick={() => setIsOpen(false)} 
+                      className="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl shadow-xl relative overflow-hidden group cursor-pointer hover:border-sky-500/50 transition-all duration-300 block"
+                    >
+                      <div className="absolute inset-0 bg-sky-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className={cn(
+                          "px-2.5 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wider border",
+                          event.category === "upcoming" ? "bg-sky-500/20 text-sky-400 border-sky-500/30" :
+                          event.category === "current" ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" :
+                          "bg-slate-800 text-slate-400 border-slate-700"
+                        )}>
+                          {event.category === "upcoming" ? "Upcoming" : event.category === "current" ? "Live Now" : "Past Event"}
+                        </span>
+                        <span className="text-[10px] font-mono text-slate-400">{event.date}</span>
+                      </div>
+                      <h3 className="text-base font-bold text-white mb-1 line-clamp-1 group-hover:text-sky-300 transition-colors">
+                        {event.title}
+                      </h3>
+                      <p className="text-slate-400 text-xs mb-2 line-clamp-2 leading-relaxed">
+                        {event.description || `${event.title} organized by CSI x D'CODERS.`}
+                      </p>
+                      <span className="text-xs font-semibold text-sky-400 group-hover:text-sky-300 transition-colors flex items-center gap-1">
+                        Explore Details &rarr;
+                      </span>
+                    </Link>
+                  ))
+                ) : (
+                  <div className="text-xs text-slate-500 italic p-4 text-center border border-dashed border-slate-800 rounded-xl">
+                    No featured events available right now.
+                  </div>
+                )}
 
               </motion.div>
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { 
-  ArrowRight, Code, Cpu, Globe, Sparkles, Flame, Users, CheckCircle2 
+  ArrowRight, Code, Cpu, Globe, Sparkles, Flame, Users, CheckCircle2, ExternalLink 
 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -19,7 +19,7 @@ export default function Home() {
     liveProjects: "50+",
     placementRate: "100%"
   });
-  const [featuredEvent, setFeaturedEvent] = useState<EventItem | null>(null);
+  const [featuredEvents, setFeaturedEvents] = useState<EventItem[]>([]);
   const [flippedCards, setFlippedCards] = useState<Record<string, boolean>>({});
 
   const toggleCardFlip = (key: string) => {
@@ -29,8 +29,9 @@ export default function Home() {
   const loadData = async () => {
     setStats(await DataStore.getStats());
     const events = await DataStore.getEvents();
-    const upcoming = events.find(e => e.category === "upcoming") || events[0] || null;
-    setFeaturedEvent(upcoming);
+    // Prioritize events explicitly marked as featured OR categorized as upcoming/current
+    const featured = events.filter(e => e.isFeatured || e.category === "upcoming" || e.category === "current");
+    setFeaturedEvents(featured.length > 0 ? featured : (events.length > 0 ? [events[0]] : []));
   };
 
   useEffect(() => {
@@ -425,33 +426,98 @@ export default function Home() {
       {/* ========================================================================= */}
       {/* 5. FEATURED EVENT BANNER */}
       {/* ========================================================================= */}
-      {featuredEvent && (
-        <section className="py-24 px-4 md:px-16 lg:px-24">
-          <div className="max-w-7xl mx-auto relative rounded-3xl overflow-hidden border border-slate-800 group shadow-2xl">
-            <div className="absolute inset-0 bg-slate-950" />
-            <div 
-              style={{ backgroundImage: `url(${featuredEvent.image})` }}
-              className="absolute inset-0 bg-cover bg-center opacity-20 group-hover:opacity-30 transition-opacity duration-500" 
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-sky-950/40 to-blue-950/40" />
+      {/* ========================================================================= */}
+      {/* 5. DYNAMIC FEATURED HIGHLIGHTS SECTION (MANAGED FROM ADMIN PANEL) */}
+      {/* ========================================================================= */}
+      {featuredEvents.length > 0 && (
+        <section className="py-24 px-4 md:px-16 lg:px-24 relative overflow-hidden border-t border-slate-800/80">
+          <div className="max-w-7xl mx-auto">
             
-            <div className="relative z-10 p-10 md:p-16 flex flex-col md:flex-row items-center justify-between gap-8">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-12">
               <div>
-                <span className="px-3 py-1 text-xs font-bold bg-sky-500/20 text-sky-400 border border-sky-500/30 rounded-full uppercase tracking-wider mb-4 inline-block shadow-sm">
-                  Featured Event
+                <span className="px-3.5 py-1 text-xs font-bold uppercase tracking-widest text-sky-400 bg-sky-500/10 rounded-full border border-sky-500/30 mb-3 inline-block shadow-sm">
+                  Live &amp; Flagship Programs
                 </span>
-                <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">{featuredEvent.title}</h2>
-                <p className="text-base md:text-lg text-slate-300 max-w-xl">
-                  {featuredEvent.description}
-                </p>
+                <h2 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight">
+                  Featured Highlights
+                </h2>
               </div>
               <Link
                 href="/events"
-                className="px-8 py-4 bg-white hover:bg-sky-50 text-slate-950 font-bold rounded-full transition-all duration-300 hover:scale-105 shadow-[0_0_25px_rgba(255,255,255,0.2)] whitespace-nowrap"
+                className="text-xs font-mono font-bold text-sky-400 hover:text-sky-300 flex items-center gap-1 hover:underline shrink-0"
               >
-                Explore Details &rarr;
+                <span>View All Events ({featuredEvents.length})</span>
+                <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
+
+            {/* Highlights Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {featuredEvents.map((event) => (
+                <div
+                  key={event.id}
+                  className="group relative bg-slate-900/80 border border-slate-800/90 hover:border-sky-500/50 rounded-3xl p-8 backdrop-blur-xl transition-all duration-500 shadow-2xl flex flex-col justify-between hover:shadow-[0_0_35px_rgba(56,189,248,0.2)] hover:scale-[1.01]"
+                >
+                  <div className="space-y-4">
+                    {/* Badge */}
+                    <div className="flex items-center justify-between">
+                      <span className={cn(
+                        "px-3 py-1 text-[11px] font-mono font-bold rounded-full uppercase tracking-wider border backdrop-blur-md",
+                        event.category === "upcoming" ? "bg-sky-500/20 text-sky-300 border-sky-500/40 shadow-[0_0_12px_rgba(56,189,248,0.2)]" :
+                        event.category === "current" ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 animate-pulse" :
+                        "bg-blue-500/20 text-blue-300 border-blue-500/40"
+                      )}>
+                        {event.category === "upcoming" ? "UPCOMING" : event.category === "current" ? "LIVE NOW" : "WORKSHOP / FLAGSHIP"}
+                      </span>
+                      <span className="text-xs text-slate-500 font-mono">{event.date}</span>
+                    </div>
+
+                    {/* Title & Description */}
+                    <div>
+                      <h3 className="text-2xl font-extrabold text-white group-hover:text-sky-300 transition-colors tracking-tight mb-2">
+                        {event.title}
+                      </h3>
+                      <p className="text-slate-300 text-sm font-light leading-relaxed line-clamp-3">
+                        {event.description}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="pt-6 mt-6 border-t border-slate-800/80 flex flex-wrap items-center gap-4 justify-between">
+                    {event.registrationUrl && event.registrationUrl.trim() !== "" && event.registrationUrl !== "#" ? (
+                      <a
+                        href={event.registrationUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-6 py-3 rounded-xl bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 hover:from-sky-400 hover:to-blue-500 text-white font-extrabold flex items-center gap-2 text-xs shadow-[0_0_20px_rgba(56,189,248,0.3)] transition-all hover:scale-105 cursor-pointer"
+                      >
+                        <span>Register Now</span>
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    ) : (
+                      <a
+                        href={`mailto:lead.csidcoders@gmail.com?subject=Registration Inquiry for ${encodeURIComponent(event.title)}`}
+                        className="px-6 py-3 rounded-xl bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 hover:from-sky-400 hover:to-blue-500 text-white font-extrabold flex items-center gap-2 text-xs shadow-[0_0_20px_rgba(56,189,248,0.3)] transition-all hover:scale-105 cursor-pointer"
+                      >
+                        <span>Register Now</span>
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    )}
+
+                    <Link
+                      href="/events"
+                      className="text-xs font-mono font-bold text-slate-400 hover:text-white flex items-center gap-1 transition-colors"
+                    >
+                      <span>Explore Details</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+
           </div>
         </section>
       )}

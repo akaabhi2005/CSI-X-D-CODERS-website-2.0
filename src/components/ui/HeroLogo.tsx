@@ -302,7 +302,7 @@ export function HeroLogo() {
           <div
             style={{ transform: "translateZ(28px)" }}
             className={cn(
-              "relative z-20 w-52 h-52 sm:w-68 sm:h-68 md:w-80 md:h-80 lg:w-96 lg:h-96 rounded-full p-2.5 sm:p-4 bg-slate-950/90 border-2 border-sky-500/40 shadow-[0_0_60px_rgba(56,189,248,0.35)] transition-all duration-300 flex items-center justify-center overflow-hidden pointer-events-none select-none transform-gpu will-change-transform",
+              "relative z-20 w-52 h-52 sm:w-68 sm:h-68 md:w-80 md:h-80 lg:w-96 lg:h-96 rounded-full p-1 sm:p-2 bg-slate-950/90 border border-sky-500/30 shadow-[0_0_60px_rgba(56,189,248,0.35)] transition-all duration-300 flex items-center justify-center overflow-hidden pointer-events-none select-none transform-gpu will-change-transform",
               isHovered && "border-sky-400 shadow-[0_0_80px_rgba(56,189,248,0.6)]"
             )}
           >
@@ -316,40 +316,82 @@ export function HeroLogo() {
                 repeat: isHovered ? 0 : Infinity,
                 ease: "easeInOut",
               }}
-              className="w-full h-full relative flex items-center justify-center pointer-events-none rounded-full overflow-hidden"
+              className="w-full h-full relative flex items-center justify-center pointer-events-none rounded-full [perspective:1000px]"
             >
               {/* Dynamic Specular Sheen Overlay */}
               <motion.div
-                className="absolute inset-0 pointer-events-none rounded-full"
+                className="absolute inset-0 pointer-events-none rounded-full z-20"
                 style={{
                   background: `radial-gradient(circle at ${glareX} ${glareY}, rgba(255,255,255,0.22) 0%, rgba(56,189,248,0.08) 40%, transparent 70%)`,
                 }}
               />
 
-              {/* Inner Cyber Rings */}
-              <div className="absolute inset-2 rounded-full border border-sky-400/20 pointer-events-none" />
-              <div className="absolute inset-5 rounded-full border border-sky-400/10 pointer-events-none" />
+              {/* Inner Subtle Cyber Ring */}
+              <div className="absolute inset-1 rounded-full border border-sky-400/15 pointer-events-none z-20" />
 
-              {/* The High-Resolution Logo */}
-              <img
-                src="/csi-logo.png"
-                alt="CSI SRMCEM Logo"
-                draggable={false}
-                onDragStart={(e) => e.preventDefault()}
-                style={{
-                  WebkitUserDrag: "none",
-                  userSelect: "none",
-                  pointerEvents: "none",
-                } as React.CSSProperties}
-                className="w-full h-full object-contain rounded-full relative z-10 drop-shadow-[0_0_25px_rgba(56,189,248,0.5)] transform-gpu pointer-events-none select-none"
-                onError={(e) => {
-                  e.currentTarget.src =
-                    "https://via.placeholder.com/500x500/0f172a/38bdf8?text=CSI+SRMCEM";
+              {/* CONTINUOUS 3D FLIPPING LOGO (FRONT: CSI, BACK: D'CODERS) */}
+              <motion.div
+                className="w-[96%] h-[96%] relative [transform-style:preserve-3d] flex items-center justify-center pointer-events-none"
+                animate={{ rotateY: 360 }}
+                transition={{
+                  duration: 10,
+                  repeat: Infinity,
+                  ease: "linear",
                 }}
-              />
+              >
+                {/* FRONT FACE: CSI LOGO */}
+                <div 
+                  className="absolute inset-0 w-full h-full flex items-center justify-center rounded-full"
+                  style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }}
+                >
+                  <img
+                    src="/csi-logo.png"
+                    alt="CSI SRMCEM Logo"
+                    draggable={false}
+                    onDragStart={(e) => e.preventDefault()}
+                    style={{
+                      WebkitUserDrag: "none",
+                      userSelect: "none",
+                      pointerEvents: "none",
+                    } as React.CSSProperties}
+                    className="w-full h-full object-contain rounded-full drop-shadow-[0_0_35px_rgba(56,189,248,0.8)]"
+                    onError={(e) => {
+                      e.currentTarget.src =
+                        "https://via.placeholder.com/500x500/0f172a/38bdf8?text=CSI+SRMCEM";
+                    }}
+                  />
+                </div>
+
+                {/* BACK FACE: D'CODERS LOGO */}
+                <div 
+                  className="absolute inset-0 w-full h-full flex items-center justify-center rounded-full"
+                  style={{ 
+                    backfaceVisibility: "hidden", 
+                    WebkitBackfaceVisibility: "hidden",
+                    transform: "rotateY(180deg)"
+                  }}
+                >
+                  <img
+                    src="/decoders-logo.png"
+                    alt="D'CODERS Logo"
+                    draggable={false}
+                    onDragStart={(e) => e.preventDefault()}
+                    style={{
+                      WebkitUserDrag: "none",
+                      userSelect: "none",
+                      pointerEvents: "none",
+                    } as React.CSSProperties}
+                    className="w-full h-full object-contain rounded-full drop-shadow-[0_0_35px_rgba(59,130,246,0.9)]"
+                    onError={(e) => {
+                      e.currentTarget.src =
+                        "https://via.placeholder.com/500x500/0f172a/3b82f6?text=D'CODERS";
+                    }}
+                  />
+                </div>
+              </motion.div>
 
               {/* Top Specular Reflection Highlight */}
-              <div className="absolute top-1 left-1/4 right-1/4 h-1/4 bg-gradient-to-b from-white/20 via-white/5 to-transparent rounded-t-full pointer-events-none" />
+              <div className="absolute top-1 left-1/4 right-1/4 h-1/4 bg-gradient-to-b from-white/20 via-white/5 to-transparent rounded-t-full pointer-events-none z-20" />
             </motion.div>
           </div>
         </motion.div>

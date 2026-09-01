@@ -219,25 +219,18 @@ const milestones = [
 // --- PAST CLUB HEADS (HALL OF FAME) DATA --- //
 const pastHeads = [
   {
-    name: "Shraddha",
+    name: "Shraddha Singh",
     role: "Lead (AIML)",
-    image: "/team/shraddha.jpg",
-    placedAt: "TBA",
+    image: "/team/shraddha.jpg.png",
+    placedAt: "CSI Leadership",
     backBio: "Lead at CSI SRMCEM. Driving technical excellence in Artificial Intelligence and Machine Learning."
   },
   {
     name: "Aastha Prakash",
     role: "Chapter Lead (2024-2025)",
-    image: "/team/aastha.jpg",
+    image: "/team/aastha.jpg.png",
     placedAt: "Josh Technology Group",
     backBio: "Former Chapter Lead at CSI SRMCEM. Currently working as a Software Quality Analyst at Josh Technology Group."
-  },
-  {
-    name: "Hall of Fame 3",
-    role: "President (2020-2021)",
-    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=400&h=400",
-    placedAt: "TBA",
-    backBio: "Details pending..."
   }
 ];
 
@@ -595,9 +588,9 @@ export default function AboutPage() {
       </section>
 
       {/* ========================================================================= */}
-      {/* 4. FACULTY MENTOR SUPPORT — "OUR GUIDING FORCE" (3D FLIP CARD RESTORED) */}
+      {/* 4. FACULTY COORDINATORS — "OUR GUIDING FORCE" (HOVER GLASSMORPHISM GRID) */}
       {/* ========================================================================= */}
-      <section className="py-24 px-4 md:px-16 lg:px-24 max-w-5xl mx-auto relative">
+      <section className="py-24 px-4 md:px-16 lg:px-24 max-w-7xl mx-auto relative">
         <motion.div
           initial="hidden"
           whileInView="visible"
@@ -609,64 +602,135 @@ export default function AboutPage() {
             Visionary Mentorship
           </span>
           <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-4">
-            Our Guiding <span className={cn("text-transparent bg-clip-text bg-gradient-to-r", config.gradientText)}>Force</span>
+            Faculty <span className={cn("text-transparent bg-clip-text bg-gradient-to-r", config.gradientText)}>Coordinators</span>
           </h2>
-          <p className="text-slate-400 max-w-xl mx-auto">Under the leadership, guidance, and continuous support of our faculty mentors.</p>
+          <p className="text-slate-400 max-w-xl mx-auto">
+            Guiding CSI_SRMCEM X D&apos;CODERS towards technical excellence, innovation, and leadership.
+          </p>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
-          onClick={() => toggleCardFlip('mentor')}
-          className="group h-[560px] md:h-[480px] [perspective:1000px] w-full cursor-pointer"
-        >
-          <div className={cn(
-            "relative w-full h-full transition-transform duration-700 [transform-style:preserve-3d] group-hover:[transform:rotateY(180deg)] group-hover:scale-[1.01]",
-            flippedCards['mentor'] && "[transform:rotateY(180deg)] scale-[1.01]"
-          )}>
+        {/* 2-Column Responsive Hover Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10">
+          
+          {/* Coordinator 1: Dr. Pankaj Kumar */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="group relative bg-slate-900/80 border border-slate-800 hover:border-sky-500/50 rounded-3xl p-8 sm:p-10 backdrop-blur-2xl shadow-2xl hover:shadow-[0_0_40px_rgba(56,189,248,0.25)] transition-all duration-500 flex flex-col justify-between overflow-hidden hover:-translate-y-1.5"
+          >
+            {/* Ambient Corner Glow */}
+            <div className="absolute top-0 right-0 w-48 h-48 bg-sky-500/10 rounded-full blur-[50px] group-hover:bg-sky-500/20 transition-all pointer-events-none" />
 
-            {/* Front Side */}
-            <div className="absolute inset-0 [backface-visibility:hidden] bg-slate-900/80 border border-slate-800 rounded-3xl p-8 md:p-14 flex flex-col md:flex-row items-center justify-center gap-10 shadow-2xl group-hover:border-sky-500/50 group-hover:shadow-[0_0_35px_rgba(56,189,248,0.3)] transition-all backdrop-blur-xl">
-              <div className="w-48 h-48 sm:w-56 sm:h-56 md:w-60 md:h-60 rounded-full overflow-hidden border-4 border-sky-500/40 shadow-[0_0_30px_rgba(56,189,248,0.3)] shrink-0 bg-slate-950 flex items-center justify-center">
-                <img
-                  src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=400&h=400"
-                  alt="Pankaj Kumar"
-                  className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
-                />
-              </div>
-              <div className="text-center md:text-left flex-1">
-                <span className="px-3.5 py-1 bg-sky-500/20 text-sky-300 text-xs font-bold rounded-full uppercase tracking-wider mb-4 inline-block border border-sky-500/30">
-                  Faculty Mentor
-                </span>
-                <h3 className="text-3xl md:text-4xl font-extrabold text-white mb-2 tracking-tight">Pankaj Kumar</h3>
-                <p className="text-lg md:text-xl text-sky-400 font-semibold">HOD, Department of Computer Science &amp; Engineering (CSE)</p>
-              </div>
-            </div>
+            <div>
+              {/* Header Badge & Avatar */}
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-6">
+                <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl overflow-hidden border-2 border-sky-500/40 shadow-[0_0_20px_rgba(56,189,248,0.2)] shrink-0 bg-slate-950 group-hover:scale-105 transition-transform duration-500">
+                  <img
+                    src="/team/pankajkumar.jpg.jpeg"
+                    alt="Dr. Pankaj Kumar"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
 
-            {/* Back Side */}
-            <div className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] bg-gradient-to-br from-slate-950 via-slate-900 to-sky-950/80 border border-sky-500/50 rounded-3xl p-8 md:p-14 flex flex-col items-center justify-center text-center shadow-[0_0_40px_rgba(56,189,248,0.35)] backdrop-blur-xl">
-              <span className="px-3.5 py-1 bg-sky-500/20 text-sky-300 text-xs font-bold rounded-full uppercase tracking-wider mb-4 border border-sky-500/30">
-                Mentor&apos;s Word
-              </span>
-              <h3 className="text-2xl md:text-3xl font-extrabold text-white mb-4">Engineering Real Impact</h3>
-              <p className="text-slate-300 leading-relaxed mb-6 max-w-2xl font-light text-base md:text-lg">
-                &ldquo;The goal of CSI_SRMCEM X D&apos;CODERS is not just to write code, but to engineer solutions that impact society. I am incredibly proud of the innovative spirit, technical excellence, and 100% placement record our students consistently maintain under this chapter.&rdquo;
+                <div className="text-center sm:text-left flex-1">
+                  <span className="px-3 py-1 bg-sky-500/15 text-sky-300 text-xs font-mono font-bold rounded-full uppercase tracking-wider mb-2.5 inline-block border border-sky-500/30">
+                    CSI Faculty Coordinator
+                  </span>
+                  <h3 className="text-2xl sm:text-3xl font-extrabold text-white mb-1.5 tracking-tight group-hover:text-sky-300 transition-colors">
+                    Dr. Pankaj Kumar
+                  </h3>
+                  <p className="text-sm font-semibold text-slate-300">
+                    Head of Department (HOD)
+                  </p>
+                  <p className="text-xs text-sky-400 font-mono mt-0.5">
+                    Computer Science &amp; Engineering (CSE)
+                  </p>
+                </div>
+              </div>
+
+              {/* Bio & Guidance */}
+              <p className="text-slate-300 text-sm leading-relaxed font-light mb-8">
+                &ldquo;Guiding students to bridge technical excellence with real-world innovation, driving industry-leading achievements and 100% placement readiness.&rdquo;
               </p>
-              <div className="flex items-center gap-4">
-                <a 
-                  href="#" 
-                  onClick={(e) => e.stopPropagation()}
-                  className="px-6 py-3 rounded-full bg-white/5 hover:bg-sky-500/20 border border-white/10 hover:border-sky-500/40 text-slate-300 hover:text-white transition-all flex items-center gap-2 text-xs md:text-sm font-semibold"
-                >
-                  <FaLinkedin className="w-4 h-4 text-sky-400" />
-                  <span>Connect on LinkedIn</span>
-                </a>
-              </div>
             </div>
 
-          </div>
-        </motion.div>
+            {/* Action Area */}
+            <div className="pt-4 border-t border-slate-800/80 flex items-center justify-between">
+              <span className="text-xs font-mono text-slate-400">SRMCEM, Lucknow</span>
+              <a 
+                href="https://www.linkedin.com/in/dr-pankaj-kumar-47950476/" 
+                target="_blank"
+                rel="noreferrer"
+                className="px-5 py-2.5 rounded-xl bg-white/5 hover:bg-sky-500/20 border border-white/10 hover:border-sky-500/40 text-slate-200 hover:text-white transition-all flex items-center gap-2 text-xs font-bold cursor-pointer shadow-sm group/btn"
+              >
+                <FaLinkedin className="w-4 h-4 text-sky-400 group-hover/btn:scale-110 transition-transform" />
+                <span>Connect on LinkedIn</span>
+              </a>
+            </div>
+          </motion.div>
+
+          {/* Coordinator 2: Er. Saurabh Bahadur Bais */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.15 }}
+            className="group relative bg-slate-900/80 border border-slate-800 hover:border-blue-500/50 rounded-3xl p-8 sm:p-10 backdrop-blur-2xl shadow-2xl hover:shadow-[0_0_40px_rgba(59,130,246,0.25)] transition-all duration-500 flex flex-col justify-between overflow-hidden hover:-translate-y-1.5"
+          >
+            {/* Ambient Corner Glow */}
+            <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/10 rounded-full blur-[50px] group-hover:bg-blue-500/20 transition-all pointer-events-none" />
+
+            <div>
+              {/* Header Badge & Avatar */}
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-6">
+                <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl overflow-hidden border-2 border-blue-500/40 shadow-[0_0_20px_rgba(59,130,246,0.2)] shrink-0 bg-slate-950 group-hover:scale-105 transition-transform duration-500">
+                  <img
+                    src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400&h=400"
+                    alt="Er. Saurabh Bahadur Bais"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+
+                <div className="text-center sm:text-left flex-1">
+                  <span className="px-3 py-1 bg-blue-500/15 text-blue-300 text-xs font-mono font-bold rounded-full uppercase tracking-wider mb-2.5 inline-block border border-blue-500/30">
+                    D&apos;CODERS Faculty Coordinator
+                  </span>
+                  <h3 className="text-2xl sm:text-3xl font-extrabold text-white mb-1.5 tracking-tight group-hover:text-blue-300 transition-colors">
+                    Saurabh Bahadur Bais
+                  </h3>
+                  <p className="text-sm font-semibold text-slate-300">
+                    Assistant Professor
+                  </p>
+                  <p className="text-xs text-blue-400 font-mono mt-0.5">
+                    Computer Science &amp; Engineering (CSE)
+                  </p>
+                </div>
+              </div>
+
+              {/* Bio & Guidance */}
+              <p className="text-slate-300 text-sm leading-relaxed font-light mb-8">
+                &ldquo;Fostering hands-on development, competitive programming, and problem-solving mindsets to empower the next generation of software engineers.&rdquo;
+              </p>
+            </div>
+
+            {/* Action Area */}
+            <div className="pt-4 border-t border-slate-800/80 flex items-center justify-between">
+              <span className="text-xs font-mono text-slate-400">SRMCEM, Lucknow</span>
+              <a 
+                href="https://www.linkedin.com/in/saurabhbahadur/" 
+                target="_blank"
+                rel="noreferrer"
+                className="px-5 py-2.5 rounded-xl bg-white/5 hover:bg-blue-500/20 border border-white/10 hover:border-blue-500/40 text-slate-200 hover:text-white transition-all flex items-center gap-2 text-xs font-bold cursor-pointer shadow-sm group/btn"
+              >
+                <FaLinkedin className="w-4 h-4 text-blue-400 group-hover/btn:scale-110 transition-transform" />
+                <span>Connect on LinkedIn</span>
+              </a>
+            </div>
+          </motion.div>
+
+        </div>
       </section>
 
       {/* ========================================================================= */}
@@ -689,7 +753,7 @@ export default function AboutPage() {
           <p className="text-slate-400 max-w-xl mx-auto">The visionaries and student leaders who led CSI_SRMCEM X D&apos;CODERS to historic heights.</p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 max-w-5xl mx-auto gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 max-w-2xl mx-auto gap-8 justify-center">
           {legacyList.map((head, i) => (
             <motion.div
               key={head.name + i}
@@ -698,7 +762,7 @@ export default function AboutPage() {
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
               onClick={() => toggleCardFlip(`head-${i}`)}
-              className="group h-[380px] [perspective:1000px] cursor-pointer"
+              className="group h-[360px] w-full max-w-[320px] mx-auto [perspective:1000px] cursor-pointer"
             >
               <div className={cn(
                 "relative w-full h-full transition-transform duration-700 [transform-style:preserve-3d] group-hover:[transform:rotateY(180deg)]",

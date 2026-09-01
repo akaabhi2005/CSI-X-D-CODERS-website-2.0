@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaLinkedin, FaGithub, FaInstagram } from "react-icons/fa";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Mail } from "lucide-react";
 import { useTheme } from "@/lib/themeContext";
 import { cn } from "@/lib/utils";
 import { DataStore, TeamMemberItem } from "@/lib/dataStore";
@@ -255,17 +255,22 @@ const NetworkNode = ({ member, direction, isFaded, setHoveredId, size = "lg" }: 
 
                   <div className="flex items-center gap-4 pt-4 border-t border-slate-800/80">
                     {member.socials?.linkedin && (
-                      <a href={member.socials.linkedin} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-sky-400 transition-colors">
+                      <a href={member.socials.linkedin} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-sky-400 transition-colors" title="LinkedIn">
                         <FaLinkedin className="w-5 h-5" />
                       </a>
                     )}
                     {member.socials?.github && (
-                      <a href={member.socials.github} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-white transition-colors">
+                      <a href={member.socials.github} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-white transition-colors" title="GitHub">
                         <FaGithub className="w-5 h-5" />
                       </a>
                     )}
+                    {member.socials?.email && (
+                      <a href={`mailto:${member.socials.email}`} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-emerald-400 transition-colors" title={`Email: ${member.socials.email}`}>
+                        <Mail className="w-5 h-5" />
+                      </a>
+                    )}
                     {member.socials?.instagram && (
-                      <a href={member.socials.instagram} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-pink-400 transition-colors">
+                      <a href={member.socials.instagram} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-pink-400 transition-colors" title="Instagram">
                         <FaInstagram className="w-5 h-5" />
                       </a>
                     )}
@@ -355,9 +360,32 @@ export default function TeamPage() {
 
   const presidents = teamData.filter(m => m.level === 1);
   const vps = teamData.filter(m => m.level === 2);
-  const heads = teamData.filter(m => m.level === 3);
-  const coheads = teamData.filter(m => m.level === 4);
+  const rawHeads = teamData.filter(m => m.level === 3);
+  const rawCoheads = teamData.filter(m => m.level === 4);
   const members = teamData.filter(m => m.level === 5);
+
+  // Exact left-to-right domain sorting for Heads
+  const getHeadScore = (pos: string) => {
+    const p = (pos || "").toLowerCase();
+    if (p.includes("technical")) return 1;
+    if (p.includes("content")) return 2;
+    if (p.includes("design")) return 3;
+    if (p.includes("photo") || p.includes("social")) return 4;
+    return 99;
+  };
+  const heads = [...rawHeads].sort((a, b) => getHeadScore(a.position) - getHeadScore(b.position));
+
+  // Exact left-to-right domain sorting for Co-heads
+  const getCoHeadScore = (pos: string) => {
+    const p = (pos || "").toLowerCase();
+    if (p.includes("technical")) return 1;
+    if (p.includes("content")) return 2;
+    if (p.includes("design")) return 3;
+    if (p.includes("pr") || p.includes("marketing")) return 4;
+    if (p.includes("photo") || p.includes("social")) return 5;
+    return 99;
+  };
+  const coheads = [...rawCoheads].sort((a, b) => getCoHeadScore(a.position) - getCoHeadScore(b.position));
   
   const techMembers = members.filter(m => m.domain === "technical");
   const contentMembers = members.filter(m => m.domain === "content");
@@ -392,10 +420,7 @@ export default function TeamPage() {
           <h1 className="text-5xl md:text-7xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-white via-slate-200 to-sky-300 mb-6 drop-shadow-lg">
             Meet Our Team
           </h1>
-          <div className={cn("w-24 h-1 mx-auto rounded-full bg-gradient-to-r mb-6", config.gradientText)} />
-          <p className="max-w-2xl mx-auto text-lg text-slate-300 font-light leading-relaxed">
-            Hover over operatives to decrypt and view complete profile data.
-          </p>
+          <div className={cn("w-24 h-1 mx-auto rounded-full bg-gradient-to-r mb-12", config.gradientText)} />
         </motion.div>
       </section>
 

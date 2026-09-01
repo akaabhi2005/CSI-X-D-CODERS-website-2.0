@@ -24,20 +24,17 @@ export function Footer() {
 
         {/* Right Side: Social Links */}
         <div className="flex items-center gap-4">
-          <a href="mailto:contact@csisrmcem.org" aria-label="Email" className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-sky-400 hover:border-sky-500/50 hover:bg-sky-950/30 transition-all duration-300 shadow-sm">
+          <a href="mailto:lead.csidcoders@gmail.com" aria-label="Email" className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-sky-400 hover:border-sky-500/50 hover:bg-sky-950/30 transition-all duration-300 shadow-sm">
             <FaEnvelope className="w-4 h-4" />
           </a>
-          <a href="https://linkedin.com" target="_blank" rel="noreferrer" aria-label="LinkedIn" className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-blue-400 hover:border-blue-500/50 hover:bg-blue-950/30 transition-all duration-300 shadow-sm">
+          <a href="https://www.linkedin.com/company/computer-society-of-india-csi-srmcem/posts/?feedView=all" target="_blank" rel="noreferrer" aria-label="LinkedIn" className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-blue-400 hover:border-blue-500/50 hover:bg-blue-950/30 transition-all duration-300 shadow-sm">
             <FaLinkedin className="w-4 h-4" />
           </a>
-          <a href="https://github.com" target="_blank" rel="noreferrer" aria-label="GitHub" className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:border-slate-500 hover:bg-slate-800 transition-all duration-300 shadow-sm">
+          <a href="https://github.com/leadcsidcoders-beep" target="_blank" rel="noreferrer" aria-label="GitHub" className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:border-slate-500 hover:bg-slate-800 transition-all duration-300 shadow-sm">
             <FaGithub className="w-4 h-4" />
           </a>
-          <a href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="Instagram" className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-sky-300 hover:border-sky-400/50 hover:bg-sky-950/30 transition-all duration-300 shadow-sm">
+          <a href="https://www.instagram.com/csi_srmcem?igsi=MWN1eWR0YnphdWhwag==" target="_blank" rel="noreferrer" aria-label="Instagram" className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-pink-400 hover:border-pink-500/50 hover:bg-pink-950/30 transition-all duration-300 shadow-sm">
             <FaInstagram className="w-4 h-4" />
-          </a>
-          <a href="https://x.com" target="_blank" rel="noreferrer" aria-label="Twitter/X" className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:border-slate-400 hover:bg-slate-800 transition-all duration-300 shadow-sm">
-            <FaXTwitter className="w-4 h-4" />
           </a>
         </div>
 

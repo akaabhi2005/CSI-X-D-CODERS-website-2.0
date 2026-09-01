@@ -56,9 +56,10 @@ export default function NewsPage() {
     issue.topics.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  const handleSubscribe = (e: React.FormEvent) => {
+  const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
+    await DataStore.addSubscriber(email);
     setIsSubscribed(true);
   };
 
