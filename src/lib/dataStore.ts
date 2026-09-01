@@ -946,30 +946,15 @@ export const DataStore = {
   // Events
   getEvents: async (): Promise<EventItem[]> => {
     const fetched = await fetchFromSupabase<EventItem>('events', defaultEvents);
-    const mergedMap = new Map<string, EventItem>();
-    
-    // First populate defaults
-    defaultEvents.forEach(item => mergedMap.set(item.id, item));
-    
-    // Override with fetched records, preserving local image paths if fetched contains missing/unsplash links
-    fetched.forEach(item => {
-      const def = mergedMap.get(item.id);
-      if (def) {
-        mergedMap.set(item.id, {
-          ...def,
-          ...item,
-          image: (item.image && !item.image.includes('unsplash.com')) ? item.image : def.image,
-          isFeatured: item.isFeatured ?? (item.category === "upcoming" || item.category === "current")
-        });
-      } else {
-        mergedMap.set(item.id, {
-          ...item,
-          isFeatured: item.isFeatured ?? (item.category === "upcoming" || item.category === "current")
-        });
-      }
+    // Return exact fetched records from Supabase, mapping image fallbacks from defaultEvents if needed
+    return fetched.map(item => {
+      const def = defaultEvents.find(d => d.id === item.id);
+      return {
+        ...item,
+        image: (item.image && !item.image.includes('unsplash.com')) ? item.image : (def?.image || item.image),
+        isFeatured: item.isFeatured ?? (item.category === "upcoming" || item.category === "current")
+      };
     });
-
-    return Array.from(mergedMap.values());
   },
   saveEvents: async (data: EventItem[]) => {
     const cleaned = data.map(({ isFeatured, ...rest }) => rest);
@@ -978,28 +963,15 @@ export const DataStore = {
 
   // Team
   getTeam: async (): Promise<TeamMemberItem[]> => {
-    const fetched = await fetchFromSupabase('team', defaultTeam);
-    // Combine fetched records with defaultTeam to ensure new members and updated image paths are preserved
-    const mergedMap = new Map<string, TeamMemberItem>();
-    
-    // First populate defaults
-    defaultTeam.forEach(item => mergedMap.set(item.id, item));
-    
-    // Override with fetched records, keeping updated local images if fetched contains placeholder or outdated links
-    fetched.forEach(item => {
-      const def = mergedMap.get(item.id);
-      if (def) {
-        mergedMap.set(item.id, {
-          ...def,
-          ...item,
-          image: (item.image && !item.image.includes('unsplash.com')) ? item.image : def.image
-        });
-      } else {
-        mergedMap.set(item.id, item);
-      }
+    const fetched = await fetchFromSupabase<TeamMemberItem>('team', defaultTeam);
+    // Return exact fetched records from Supabase, mapping image fallbacks from defaultTeam if needed
+    return fetched.map(item => {
+      const def = defaultTeam.find(d => d.id === item.id || d.name.toLowerCase() === item.name.toLowerCase());
+      return {
+        ...item,
+        image: (item.image && !item.image.includes('unsplash.com')) ? item.image : (def?.image || item.image)
+      };
     });
-
-    return Array.from(mergedMap.values());
   },
   saveTeam: async (data: TeamMemberItem[]) => await saveToSupabase('team', data),
 

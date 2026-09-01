@@ -331,12 +331,12 @@ export default function AdminPage() {
       updated = [newItem, ...events];
     }
     setEvents(updated);
-    DataStore.saveEvents(updated);
+    await DataStore.saveEvents(updated);
     setModalMode(null);
     showToast("Event saved successfully & updated on Homepage Featured Highlights!");
   };
 
-  const handleEventCategoryChange = (id: string, newCategory: "upcoming" | "current" | "past") => {
+  const handleEventCategoryChange = async (id: string, newCategory: "upcoming" | "current" | "past") => {
     const updated = events.map(ev => {
       if (ev.id === id) {
         // If moving to upcoming or current, automatically set isFeatured to true
@@ -346,23 +346,23 @@ export default function AdminPage() {
       return ev;
     });
     setEvents(updated);
-    DataStore.saveEvents(updated);
+    await DataStore.saveEvents(updated);
     showToast(`Event status updated to "${newCategory}"`);
   };
 
-  const handleToggleEventFeatured = (id: string) => {
+  const handleToggleEventFeatured = async (id: string) => {
     const updated = events.map(ev => ev.id === id ? { ...ev, isFeatured: !ev.isFeatured } : ev);
     setEvents(updated);
-    DataStore.saveEvents(updated);
+    await DataStore.saveEvents(updated);
     const target = updated.find(ev => ev.id === id);
     showToast(target?.isFeatured ? "Marked as Featured Highlight ⭐" : "Removed from Featured Highlights");
   };
 
-  const handleDeleteEvent = (id: string) => {
+  const handleDeleteEvent = async (id: string) => {
     if (!confirm("Are you sure you want to delete this event?")) return;
     const updated = events.filter(e => e.id !== id);
     setEvents(updated);
-    DataStore.saveEvents(updated);
+    await DataStore.saveEvents(updated);
     showToast("Event deleted.");
   };
 

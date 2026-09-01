@@ -23,20 +23,21 @@ export async function POST(req: NextRequest) {
     // Directory path: public/gallery
     const dirPath = join(process.cwd(), "public", "gallery");
     
-    // Check if directory exists, if not create it
-    if (!existsSync(dirPath)) {
-      await mkdir(dirPath, { recursive: true });
+    // Try local filesystem write (for local dev)
+    try {
+      if (!existsSync(dirPath)) {
+        await mkdir(dirPath, { recursive: true });
+      }
+      const filepath = join(dirPath, filename);
+      await writeFile(filepath, buffer);
+      return NextResponse.json({ success: true, url: `/gallery/${filename}` });
+    } catch (diskErr) {
+      console.warn("Disk write failed (Serverless/Vercel environment). Falling back to Base64 Data URL:", diskErr);
+      const mimeType = file.type || "image/jpeg";
+      const base64 = buffer.toString("base64");
+      const dataUrl = `data:${mimeType};base64,${base64}`;
+      return NextResponse.json({ success: true, url: dataUrl });
     }
-
-    const filepath = join(dirPath, filename);
-
-    // Write file to filesystem
-    await writeFile(filepath, buffer);
-
-    // Return the URL path
-    const url = `/gallery/${filename}`;
-
-    return NextResponse.json({ success: true, url });
   } catch (error: any) {
     console.error("Upload error:", error);
     return NextResponse.json({ success: false, error: "Failed to upload file" }, { status: 500 });
