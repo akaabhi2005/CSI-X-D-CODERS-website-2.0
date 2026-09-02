@@ -345,7 +345,7 @@ const TeamBranch = ({ title, members, hoveredId, setHoveredId, cardDirection = "
 };
 
 export default function TeamPage() {
-  const [teamData, setTeamData] = useState<any[]>([]);
+  const [teamData, setTeamData] = useState<any[]>(() => DataStore.getTeamSync());
   const [isMounted, setIsMounted] = useState(false);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const { config } = useTheme();

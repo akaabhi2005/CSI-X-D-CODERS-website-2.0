@@ -13,13 +13,12 @@ import { DataStore, ClubStats, EventItem } from "@/lib/dataStore";
 
 export default function Home() {
   const { config } = useTheme();
-  const [stats, setStats] = useState<ClubStats>({
-    eventsHosted: "50+",
-    activeMembers: "1000+",
-    liveProjects: "50+",
-    placementRate: "100%"
+  const [stats, setStats] = useState<ClubStats>(() => DataStore.getStatsSync());
+  const [featuredEvents, setFeaturedEvents] = useState<EventItem[]>(() => {
+    const events = DataStore.getEventsSync();
+    const featured = events.filter(e => e.isFeatured || e.category === "upcoming" || e.category === "current");
+    return featured.length > 0 ? featured : (events.length > 0 ? [events[0]] : []);
   });
-  const [featuredEvents, setFeaturedEvents] = useState<EventItem[]>([]);
   const [flippedCards, setFlippedCards] = useState<Record<string, boolean>>({});
 
   const toggleCardFlip = (key: string) => {
@@ -27,11 +26,13 @@ export default function Home() {
   };
 
   const loadData = async () => {
-    setStats(await DataStore.getStats());
-    const events = await DataStore.getEvents();
-    // Prioritize events explicitly marked as featured OR categorized as upcoming/current
-    const featured = events.filter(e => e.isFeatured || e.category === "upcoming" || e.category === "current");
-    setFeaturedEvents(featured.length > 0 ? featured : (events.length > 0 ? [events[0]] : []));
+    const [statsData, eventsData] = await Promise.all([
+      DataStore.getStats(),
+      DataStore.getEvents()
+    ]);
+    setStats(statsData);
+    const featured = eventsData.filter(e => e.isFeatured || e.category === "upcoming" || e.category === "current");
+    setFeaturedEvents(featured.length > 0 ? featured : (eventsData.length > 0 ? [eventsData[0]] : []));
   };
 
   useEffect(() => {

@@ -8,7 +8,7 @@ import { useTheme } from "@/lib/themeContext";
 import { cn } from "@/lib/utils";
 
 export default function GalleryPage() {
-  const [galleryData, setGalleryData] = useState<GalleryItem[]>([]);
+  const [galleryData, setGalleryData] = useState<GalleryItem[]>(() => DataStore.getGallerySync());
   const { config } = useTheme();
 
   const loadData = async () => {

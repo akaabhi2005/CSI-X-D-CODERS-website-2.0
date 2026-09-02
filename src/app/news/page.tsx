@@ -12,7 +12,7 @@ import { DataStore, NewsIssueItem } from "@/lib/dataStore";
 
 export default function NewsPage() {
   const { config } = useTheme();
-  const [issues, setIssues] = useState<NewsIssueItem[]>([]);
+  const [issues, setIssues] = useState<NewsIssueItem[]>(() => DataStore.getNewsIssuesSync());
   const [searchQuery, setSearchQuery] = useState("");
   const [email, setEmail] = useState("");
   const [isSubscribed, setIsSubscribed] = useState(false);

@@ -989,12 +989,71 @@ async function saveToSupabase<T extends { id: string }>(table: string, items: T[
   }
 }
 
+// In-Memory & LocalStorage Cache
+const memCache: {
+  events?: EventItem[];
+  team?: TeamMemberItem[];
+  legacyHeads?: LegacyHeadItem[];
+  subTeams?: SubTeamItem[];
+  coreValues?: CoreValueItem[];
+  newsIssues?: NewsIssueItem[];
+  gallery?: GalleryItem[];
+  stats?: ClubStats;
+  subscribers?: SubscriberItem[];
+} = {};
+
+function getCached<T>(key: string, fallback: T): T {
+  if (memCache[key as keyof typeof memCache]) {
+    return memCache[key as keyof typeof memCache] as unknown as T;
+  }
+  if (typeof window !== "undefined") {
+    try {
+      const stored = localStorage.getItem(`csi_cache_${key}`);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed && (Array.isArray(parsed) ? parsed.length > 0 : true)) {
+          memCache[key as keyof typeof memCache] = parsed;
+          return parsed;
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+  return fallback;
+}
+
+function setCache<T>(key: string, value: T): void {
+  memCache[key as keyof typeof memCache] = value as any;
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem(`csi_cache_${key}`, JSON.stringify(value));
+    } catch (e) {
+      // ignore
+    }
+  }
+}
+
 // Public CMS Getters & Setters
 export const DataStore = {
+  // Sync Immediate Fast Getters (0ms response time)
+  getEventsSync: (): EventItem[] => getCached("events", defaultEvents),
+  getTeamSync: (): TeamMemberItem[] => getCached("team", defaultTeam),
+  getLegacyHeadsSync: (): LegacyHeadItem[] => getCached("legacyHeads", defaultLegacyHeads),
+  getSubTeamsSync: (): SubTeamItem[] => getCached("subTeams", defaultSubTeams),
+  getCoreValuesSync: (): CoreValueItem[] => getCached("coreValues", defaultCoreValues),
+  getNewsIssuesSync: (): NewsIssueItem[] => getCached("newsIssues", defaultNewsIssues),
+  getGallerySync: (): GalleryItem[] => getCached("gallery", defaultGallery),
+  getStatsSync: (): ClubStats => getCached("stats", defaultStats),
+  getSubscribersSync: (): SubscriberItem[] => getCached("subscribers", [
+    { id: "sub-1", email: "student.tech@srmcem.ac.in", created_at: "2024-10-01T10:00:00Z" },
+    { id: "sub-2", email: "code.enthusiast@gmail.com", created_at: "2024-10-05T14:30:00Z" }
+  ]),
+
   // Events
   getEvents: async (): Promise<EventItem[]> => {
     const fetched = await fetchFromSupabase<EventItem>('events', defaultEvents);
-    return fetched.map(item => {
+    const processed = fetched.map(item => {
       const def = defaultEvents.find(d => d.id === item.id);
       return {
         ...item,
@@ -1002,8 +1061,11 @@ export const DataStore = {
         isFeatured: item.isFeatured ?? (item.category === "upcoming" || item.category === "current")
       };
     });
+    setCache("events", processed);
+    return processed;
   },
   saveEvents: async (data: EventItem[]) => {
+    setCache("events", data);
     const cleaned = data.map(({ isFeatured, ...rest }) => rest);
     await saveToSupabase('events', cleaned);
   },
@@ -1011,7 +1073,7 @@ export const DataStore = {
   // Team
   getTeam: async (): Promise<TeamMemberItem[]> => {
     const fetched = await fetchFromSupabase<TeamMemberItem>('team', defaultTeam);
-    return fetched.map(item => {
+    const processed = fetched.map(item => {
       const def = defaultTeam.find(d => d.id === item.id || d.name.toLowerCase() === item.name.toLowerCase());
       const normalizedImg = normalizeTeamImage(item.image, def?.image);
       return {
@@ -1019,67 +1081,110 @@ export const DataStore = {
         image: normalizedImg
       };
     });
+    setCache("team", processed);
+    return processed;
   },
-  saveTeam: async (data: TeamMemberItem[]) => await saveToSupabase('team', data),
+  saveTeam: async (data: TeamMemberItem[]) => {
+    setCache("team", data);
+    await saveToSupabase('team', data);
+  },
 
   // Legacy Heads
   getLegacyHeads: async (): Promise<LegacyHeadItem[]> => {
     const fetched = await fetchFromSupabase('legacy_heads', defaultLegacyHeads);
-    return fetched.map(item => {
+    const processed = fetched.map(item => {
       const def = defaultLegacyHeads.find(d => d.id === item.id);
       return {
         ...item,
         image: (item.image && !item.image.includes('unsplash.com')) ? item.image : (def?.image || item.image)
       };
     });
+    setCache("legacyHeads", processed);
+    return processed;
   },
-  saveLegacyHeads: async (data: LegacyHeadItem[]) => await saveToSupabase('legacy_heads', data),
+  saveLegacyHeads: async (data: LegacyHeadItem[]) => {
+    setCache("legacyHeads", data);
+    await saveToSupabase('legacy_heads', data);
+  },
 
   // Sub-Teams
-  getSubTeams: async (): Promise<SubTeamItem[]> => await fetchFromSupabase('sub_teams', defaultSubTeams),
-  saveSubTeams: async (data: SubTeamItem[]) => await saveToSupabase('sub_teams', data),
+  getSubTeams: async (): Promise<SubTeamItem[]> => {
+    const res = await fetchFromSupabase('sub_teams', defaultSubTeams);
+    setCache("subTeams", res);
+    return res;
+  },
+  saveSubTeams: async (data: SubTeamItem[]) => {
+    setCache("subTeams", data);
+    await saveToSupabase('sub_teams', data);
+  },
 
   // Core Values
-  getCoreValues: async (): Promise<CoreValueItem[]> => await fetchFromSupabase('core_values', defaultCoreValues),
-  saveCoreValues: async (data: CoreValueItem[]) => await saveToSupabase('core_values', data),
+  getCoreValues: async (): Promise<CoreValueItem[]> => {
+    const res = await fetchFromSupabase('core_values', defaultCoreValues);
+    setCache("coreValues", res);
+    return res;
+  },
+  saveCoreValues: async (data: CoreValueItem[]) => {
+    setCache("coreValues", data);
+    await saveToSupabase('core_values', data);
+  },
 
   // News Issues
   getNewsIssues: async (): Promise<NewsIssueItem[]> => {
     const issues = await fetchFromSupabase<NewsIssueItem>('news_issues', defaultNewsIssues);
-    return issues.map(item => ({
+    const processed = issues.map(item => ({
       ...item,
       pdfUrl: item.pdfUrl && item.pdfUrl.includes("w3.org") ? "/documents/csi-gazette-october-2024.pdf" : item.pdfUrl
     }));
+    setCache("newsIssues", processed);
+    return processed;
   },
-  saveNewsIssues: async (data: NewsIssueItem[]) => await saveToSupabase('news_issues', data),
+  saveNewsIssues: async (data: NewsIssueItem[]) => {
+    setCache("newsIssues", data);
+    await saveToSupabase('news_issues', data);
+  },
 
   // Gallery
-  getGallery: async (): Promise<GalleryItem[]> => await fetchFromSupabase('gallery', defaultGallery),
-  saveGallery: async (data: GalleryItem[]) => await saveToSupabase('gallery', data),
+  getGallery: async (): Promise<GalleryItem[]> => {
+    const res = await fetchFromSupabase('gallery', defaultGallery);
+    setCache("gallery", res);
+    return res;
+  },
+  saveGallery: async (data: GalleryItem[]) => {
+    setCache("gallery", data);
+    await saveToSupabase('gallery', data);
+  },
 
   // Stats
   getStats: async (): Promise<ClubStats> => {
     try {
       const { data, error } = await supabase.from('stats').select('*').eq('id', 'main').single();
       if (error) {
-        if (error.code === 'PGRST116') return defaultStats; // Not found
+        if (error.code === 'PGRST116') {
+          setCache("stats", defaultStats);
+          return defaultStats;
+        }
         throw error;
       }
-      return data as ClubStats;
+      const res = data as ClubStats;
+      setCache("stats", res);
+      return res;
     } catch (error) {
-      console.error(`Error fetching stats:`, error);
+      console.warn(`Notice fetching stats:`, error);
+      setCache("stats", defaultStats);
       return defaultStats;
     }
   },
   saveStats: async (data: ClubStats) => {
     try {
+      setCache("stats", data);
       const { error } = await supabase.from('stats').upsert({ id: 'main', ...data });
       if (error) throw error;
       if (typeof window !== "undefined") {
         window.dispatchEvent(new Event("csi_data_updated"));
       }
     } catch (error) {
-      console.error(`Error saving stats:`, error);
+      console.warn(`Notice saving stats:`, error);
     }
   },
 

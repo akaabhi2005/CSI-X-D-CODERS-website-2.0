@@ -18,7 +18,7 @@ const tabs: { id: Category; label: string }[] = [
 export default function EventsPage() {
   const { config } = useTheme();
   const [activeTab, setActiveTab] = useState<Category>("upcoming");
-  const [eventsData, setEventsData] = useState<EventItem[]>([]);
+  const [eventsData, setEventsData] = useState<EventItem[]>(() => DataStore.getEventsSync());
   const [visibleCount, setVisibleCount] = useState(6);
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
 

@@ -252,21 +252,23 @@ export default function AboutPage() {
 
   useEffect(() => {
     const loadData = async () => {
-      const storedSubTeams = await DataStore.getSubTeams();
+      const [storedSubTeams, storedCoreValues, storedLegacy] = await Promise.all([
+        DataStore.getSubTeams(),
+        DataStore.getCoreValues(),
+        DataStore.getLegacyHeads()
+      ]);
       if (storedSubTeams && storedSubTeams.length > 0) {
         setSubTeamsList(storedSubTeams.map(s => ({
           ...s,
           icon: getSubTeamIcon(s.title)
         })));
       }
-      const storedCoreValues = await DataStore.getCoreValues();
       if (storedCoreValues && storedCoreValues.length > 0) {
         setCoreValuesList(storedCoreValues.map(c => ({
           ...c,
           icon: getCoreValueIcon(c.title)
         })));
       }
-      const storedLegacy = await DataStore.getLegacyHeads();
       if (storedLegacy && storedLegacy.length > 0) {
         setLegacyList(storedLegacy.map(l => ({
           name: l.name,

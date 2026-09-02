@@ -31,20 +31,16 @@ export default function AdminPage() {
   const [gallerySizeFilter, setGallerySizeFilter] = useState<string>("all");
 
   // Dynamic CMS States
-  const [events, setEvents] = useState<EventItem[]>([]);
-  const [team, setTeam] = useState<TeamMemberItem[]>([]);
-  const [legacyHeads, setLegacyHeads] = useState<LegacyHeadItem[]>([]);
-  const [subTeams, setSubTeams] = useState<SubTeamItem[]>([]);
-  const [coreValues, setCoreValues] = useState<CoreValueItem[]>([]);
-  const [newsIssues, setNewsIssues] = useState<NewsIssueItem[]>([]);
-  const [gallery, setGallery] = useState<GalleryItem[]>([]);
-  const [subscribers, setSubscribers] = useState<SubscriberItem[]>([]);
-  const [stats, setStats] = useState<ClubStats>({
-    eventsHosted: "50+",
-    activeMembers: "1k+",
-    liveProjects: "10+",
-    placementRate: "100%"
-  });
+  // Dynamic CMS States (Initialized with 0ms Sync Cache)
+  const [events, setEvents] = useState<EventItem[]>(() => DataStore.getEventsSync());
+  const [team, setTeam] = useState<TeamMemberItem[]>(() => DataStore.getTeamSync());
+  const [legacyHeads, setLegacyHeads] = useState<LegacyHeadItem[]>(() => DataStore.getLegacyHeadsSync());
+  const [subTeams, setSubTeams] = useState<SubTeamItem[]>(() => DataStore.getSubTeamsSync());
+  const [coreValues, setCoreValues] = useState<CoreValueItem[]>(() => DataStore.getCoreValuesSync());
+  const [newsIssues, setNewsIssues] = useState<NewsIssueItem[]>(() => DataStore.getNewsIssuesSync());
+  const [gallery, setGallery] = useState<GalleryItem[]>(() => DataStore.getGallerySync());
+  const [subscribers, setSubscribers] = useState<SubscriberItem[]>(() => DataStore.getSubscribersSync());
+  const [stats, setStats] = useState<ClubStats>(() => DataStore.getStatsSync());
 
   // Modal / Form States
   const [modalMode, setModalMode] = useState<"add" | "edit" | null>(null);
@@ -72,17 +68,38 @@ export default function AdminPage() {
   const [loginError, setLoginError] = useState<string | null>(null);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  // Load from DataStore
+  // Load from DataStore in Parallel
   const reloadData = async () => {
-    setEvents(await DataStore.getEvents());
-    setTeam(await DataStore.getTeam());
-    setLegacyHeads(await DataStore.getLegacyHeads());
-    setSubTeams(await DataStore.getSubTeams());
-    setCoreValues(await DataStore.getCoreValues());
-    setNewsIssues(await DataStore.getNewsIssues());
-    setGallery(await DataStore.getGallery());
-    setSubscribers(await DataStore.getSubscribers());
-    setStats(await DataStore.getStats());
+    const [
+      evs,
+      tm,
+      leg,
+      sub,
+      core,
+      news,
+      gal,
+      subs,
+      st
+    ] = await Promise.all([
+      DataStore.getEvents(),
+      DataStore.getTeam(),
+      DataStore.getLegacyHeads(),
+      DataStore.getSubTeams(),
+      DataStore.getCoreValues(),
+      DataStore.getNewsIssues(),
+      DataStore.getGallery(),
+      DataStore.getSubscribers(),
+      DataStore.getStats()
+    ]);
+    setEvents(evs);
+    setTeam(tm);
+    setLegacyHeads(leg);
+    setSubTeams(sub);
+    setCoreValues(core);
+    setNewsIssues(news);
+    setGallery(gal);
+    setSubscribers(subs);
+    setStats(st);
   };
 
   useEffect(() => {
