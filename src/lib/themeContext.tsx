@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from "react";
 
 export type ThemeKey = "electric-cyber" | "stealth-obsidian";
 
@@ -34,7 +34,6 @@ export const THEMES: Record<ThemeKey, ThemeConfig> = {
     borderHex: "#1e293b",
     swatchColors: ["#030712", "#38bdf8", "#3b82f6"],
     particleColors: ["#38bdf8", "#3b82f6", "#60a5fa"],
-    // Default theme vibrant gradient coloring
     titlePrimaryGradient: "from-white via-sky-200 to-cyan-400",
     titleSecondaryGradient: "from-sky-400 via-cyan-400 to-blue-500",
     titleGlow1: "drop-shadow-[0_0_35px_rgba(56,189,248,0.35)]",
@@ -53,7 +52,6 @@ export const THEMES: Record<ThemeKey, ThemeConfig> = {
     borderHex: "#18181b",
     swatchColors: ["#000000", "#2563eb", "#60a5fa"],
     particleColors: ["#2563eb", "#60a5fa", "#93c5fd"],
-    // Clean, high-contrast Stealth Obsidian look (crisp white CSI, subtle azure gradient DECODERS)
     titlePrimaryGradient: "from-white via-white to-slate-100",
     titleSecondaryGradient: "from-white via-slate-200 to-blue-400",
     titleGlow1: "drop-shadow-[0_0_20px_rgba(255,255,255,0.15)]",
@@ -93,16 +91,22 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const setTheme = (newTheme: ThemeKey) => {
+  const setTheme = useCallback((newTheme: ThemeKey) => {
     setThemeState(newTheme);
     localStorage.setItem("csi_theme", newTheme);
     document.documentElement.setAttribute("data-theme", newTheme);
-  };
+  }, []);
 
   const config = THEMES[theme] || THEMES["electric-cyber"];
 
+  const contextValue = useMemo(() => ({
+    theme,
+    setTheme,
+    config
+  }), [theme, setTheme, config]);
+
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, config }}>
+    <ThemeContext.Provider value={contextValue}>
       {children}
     </ThemeContext.Provider>
   );

@@ -1,11 +1,9 @@
-"use client";
-
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
 import { useTheme } from "@/lib/themeContext";
 
-export function ParticlesBackground() {
+export const ParticlesBackground = React.memo(function ParticlesBackground() {
   const [init, setInit] = useState(false);
   const { config, theme } = useTheme();
 
@@ -45,8 +43,8 @@ export function ParticlesBackground() {
           },
           modes: {
             repulse: {
-              distance: 100,
-              duration: 0.4,
+              distance: 90,
+              duration: 0.3,
             },
           },
         },
@@ -56,9 +54,9 @@ export function ParticlesBackground() {
           },
           links: {
             color: config.primaryAccent,
-            distance: 150,
+            distance: 130,
             enable: true,
-            opacity: 0.18,
+            opacity: 0.15,
             width: 1,
           },
           move: {
@@ -68,27 +66,27 @@ export function ParticlesBackground() {
               default: "bounce",
             },
             random: false,
-            speed: 0.6,
+            speed: 0.5,
             straight: false,
           },
           number: {
             density: {
               enable: true,
             },
-            value: 45,
+            value: 28,
           },
           opacity: {
-            value: 0.45,
+            value: 0.4,
           },
           shape: {
             type: "circle",
           },
           size: {
-            value: { min: 1, max: 3.5 },
+            value: { min: 1, max: 3 },
           },
         },
         detectRetina: true,
       }}
     />
   );
-}
+});

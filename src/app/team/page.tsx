@@ -12,22 +12,19 @@ import { DataStore, TeamMemberItem } from "@/lib/dataStore";
 
 type OpenDirection = "left" | "right" | "bottom";
 
-const HackerText = ({ text, className }: { text: string; className?: string }) => {
-  const [displayText, setDisplayText] = useState("");
+const HackerText = React.memo(({ text, className }: { text: string; className?: string }) => {
+  const [displayText, setDisplayText] = useState(text);
   
   useEffect(() => {
-    let interval: any;
     let iteration = 0;
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
     
-    interval = setInterval(() => {
+    const interval = setInterval(() => {
       setDisplayText(
         text
           .split("")
           .map((letter, index) => {
-            if (index < iteration) {
-              return text[index];
-            }
+            if (index < iteration) return text[index];
             return chars[Math.floor(Math.random() * chars.length)];
           })
           .join("")
@@ -36,15 +33,14 @@ const HackerText = ({ text, className }: { text: string; className?: string }) =
       if (iteration >= text.length) {
         clearInterval(interval);
       }
-      
-      iteration += 1 / 3;
-    }, 30);
+      iteration += 1;
+    }, 45);
     
     return () => clearInterval(interval);
   }, [text]);
 
   return <span className={className}>{displayText}</span>;
-};
+});
 
 const NetworkNode = ({ member, direction, isFaded, setHoveredId, size = "lg" }: { member: any, direction: OpenDirection, isFaded: boolean, setHoveredId: any, size?: "sm" | "lg" }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -116,6 +112,8 @@ const NetworkNode = ({ member, direction, isFaded, setHoveredId, size = "lg" }: 
           <img 
             src={member.image} 
             alt={member.name} 
+            loading="lazy"
+            decoding="async"
             onError={(e) => {
               (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}&background=0f172a&color=38bdf8&bold=true`;
             }}
