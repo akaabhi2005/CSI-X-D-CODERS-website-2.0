@@ -462,47 +462,30 @@ export default function TeamPage() {
           ))}
         </div>
 
-        {/* Level 3 & Level 4: Domain Heads & Co-Heads Aligned Columns */}
-        <div className="w-full max-w-[1400px] z-30 px-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-y-16 gap-x-6 justify-items-center">
-            {[1, 2, 3, 4, 5].map((score) => {
-              const head = heads.find(m => getDomainScore(m) === score);
-              const cohead = coheads.find(m => getDomainScore(m) === score);
-              const cardDir = score <= 3 ? "right" : "left";
+        {/* Level 3: Heads */}
+        <div className="relative flex flex-wrap justify-center items-center gap-x-12 gap-y-20 md:gap-x-24 md:gap-y-24 w-full max-w-[1400px] z-30 px-4">
+          {heads.map((member, idx) => (
+            <NetworkNode 
+              key={member.id} 
+              member={member} 
+              direction={idx < heads.length / 2 ? "right" : "left"} 
+              isFaded={hoveredId !== null && hoveredId !== member.id}
+              setHoveredId={setHoveredId} 
+            />
+          ))}
+        </div>
 
-              return (
-                <div key={score} className="flex flex-col items-center gap-16 md:gap-24 w-full">
-                  {/* Domain Head */}
-                  <div className="min-h-[140px] flex items-center justify-center w-full">
-                    {head ? (
-                      <NetworkNode
-                        member={head}
-                        direction={cardDir}
-                        isFaded={hoveredId !== null && hoveredId !== head.id}
-                        setHoveredId={setHoveredId}
-                      />
-                    ) : (
-                      <div className="h-10" />
-                    )}
-                  </div>
-
-                  {/* Domain Co-Head */}
-                  <div className="min-h-[140px] flex items-center justify-center w-full">
-                    {cohead ? (
-                      <NetworkNode
-                        member={cohead}
-                        direction={cardDir}
-                        isFaded={hoveredId !== null && hoveredId !== cohead.id}
-                        setHoveredId={setHoveredId}
-                      />
-                    ) : (
-                      <div className="h-10" />
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+        {/* Level 4: Co-heads */}
+        <div className="relative flex flex-wrap justify-center items-center gap-x-12 gap-y-20 md:gap-x-24 md:gap-y-24 w-full max-w-[1400px] z-20 px-4">
+          {coheads.map((member, idx) => (
+            <NetworkNode 
+              key={member.id} 
+              member={member} 
+              direction={idx < coheads.length / 2 ? "right" : "left"} 
+              isFaded={hoveredId !== null && hoveredId !== member.id}
+              setHoveredId={setHoveredId} 
+            />
+          ))}
         </div>
 
         {/* Level 5: Team Members (Domain Columns) */}
