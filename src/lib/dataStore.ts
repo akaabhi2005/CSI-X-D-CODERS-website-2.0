@@ -951,35 +951,30 @@ const LEGACY_TEAM_IMAGE_MAP: Record<string, string> = {
 };
 
 export function normalizeTeamImage(img?: string, defImg?: string): string {
-  if (!img) return defImg || "";
+  if (!img || img.trim() === "") {
+    return defImg || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300";
+  }
   const cleaned = img.trim();
-  if (LEGACY_TEAM_IMAGE_MAP[cleaned]) {
-    return LEGACY_TEAM_IMAGE_MAP[cleaned];
+  if (cleaned.startsWith('/') || cleaned.startsWith('http://') || cleaned.startsWith('https://') || cleaned.startsWith('data:')) {
+    return cleaned;
   }
-  const filename = cleaned.split('/').pop() || "";
-  if (LEGACY_TEAM_IMAGE_MAP[filename]) {
-    return LEGACY_TEAM_IMAGE_MAP[filename];
-  }
-  if (!cleaned.startsWith('/') && !cleaned.startsWith('http') && !cleaned.startsWith('data:')) {
-    return `/team/${cleaned}`;
-  }
-  return cleaned;
+  return `/team/${cleaned}`;
 }
 
 // Helper: Save to Supabase
 async function saveToSupabase<T extends { id: string }>(table: string, items: T[]): Promise<void> {
   try {
+    if (items.length > 0) {
+      const { error } = await supabase.from(table).upsert(items);
+      if (error) throw error;
+    }
+    const newIds = new Set(items.map(i => i.id));
     const { data: currentData } = await supabase.from(table).select('id');
     if (currentData) {
-      const newIds = new Set(items.map(i => i.id));
       const idsToDelete = currentData.map(c => c.id).filter(id => !newIds.has(id));
       if (idsToDelete.length > 0) {
         await supabase.from(table).delete().in('id', idsToDelete);
       }
-    }
-    if (items.length > 0) {
-      const { error } = await supabase.from(table).upsert(items);
-      if (error) throw error;
     }
     if (typeof window !== "undefined") {
       window.dispatchEvent(new Event("csi_data_updated"));
@@ -1028,6 +1023,7 @@ function setCache<T>(key: string, value: T): void {
   if (typeof window !== "undefined") {
     try {
       localStorage.setItem(`csi_cache_${key}`, JSON.stringify(value));
+      window.dispatchEvent(new Event("csi_data_updated"));
     } catch (e) {
       // ignore
     }
@@ -1056,8 +1052,9 @@ export const DataStore = {
     const processed = fetched.map(item => {
       const def = defaultEvents.find(d => d.id === item.id);
       return {
+        ...def,
         ...item,
-        image: (item.image && !item.image.includes('unsplash.com')) ? item.image : (def?.image || item.image),
+        image: item.image || def?.image || "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&q=80&w=800&h=400",
         isFeatured: item.isFeatured ?? (item.category === "upcoming" || item.category === "current")
       };
     });
@@ -1066,8 +1063,7 @@ export const DataStore = {
   },
   saveEvents: async (data: EventItem[]) => {
     setCache("events", data);
-    const cleaned = data.map(({ isFeatured, ...rest }) => rest);
-    await saveToSupabase('events', cleaned);
+    await saveToSupabase('events', data);
   },
 
   // Team
@@ -1077,8 +1073,13 @@ export const DataStore = {
       const def = defaultTeam.find(d => d.id === item.id || d.name.toLowerCase() === item.name.toLowerCase());
       const normalizedImg = normalizeTeamImage(item.image, def?.image);
       return {
+        ...def,
         ...item,
-        image: normalizedImg
+        image: normalizedImg,
+        level: item.level || def?.level || 5,
+        domain: item.domain || def?.domain || "technical",
+        skills: item.skills || def?.skills || [],
+        socials: item.socials || def?.socials || {}
       };
     });
     setCache("team", processed);
@@ -1095,8 +1096,9 @@ export const DataStore = {
     const processed = fetched.map(item => {
       const def = defaultLegacyHeads.find(d => d.id === item.id);
       return {
+        ...def,
         ...item,
-        image: (item.image && !item.image.includes('unsplash.com')) ? item.image : (def?.image || item.image)
+        image: item.image || def?.image || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400&h=400"
       };
     });
     setCache("legacyHeads", processed);
@@ -1132,10 +1134,14 @@ export const DataStore = {
   // News Issues
   getNewsIssues: async (): Promise<NewsIssueItem[]> => {
     const issues = await fetchFromSupabase<NewsIssueItem>('news_issues', defaultNewsIssues);
-    const processed = issues.map(item => ({
-      ...item,
-      pdfUrl: item.pdfUrl && item.pdfUrl.includes("w3.org") ? "/documents/csi-gazette-october-2024.pdf" : item.pdfUrl
-    }));
+    const processed = issues.map(item => {
+      const def = defaultNewsIssues.find(d => d.id === item.id);
+      return {
+        ...def,
+        ...item,
+        pdfUrl: item.pdfUrl || def?.pdfUrl || "/documents/csi-gazette-october-2024.pdf"
+      };
+    });
     setCache("newsIssues", processed);
     return processed;
   },
@@ -1277,7 +1283,11 @@ export const DataStore = {
   // Delete Subscriber
   deleteSubscriber: async (emailOrId: string): Promise<boolean> => {
     try {
-      await supabase.from("subscribers").delete().or(`id.eq.${emailOrId},email.eq.${emailOrId}`);
+      if (emailOrId.includes("@")) {
+        await supabase.from("subscribers").delete().eq("email", emailOrId);
+      } else {
+        await supabase.from("subscribers").delete().eq("id", emailOrId);
+      }
     } catch (err) {
       console.warn("Delete subscriber notice:", err);
     }
@@ -1285,6 +1295,7 @@ export const DataStore = {
       const stored: string[] = JSON.parse(localStorage.getItem("csi_subscribers") || "[]");
       const updated = stored.filter(e => e !== emailOrId);
       localStorage.setItem("csi_subscribers", JSON.stringify(updated));
+      window.dispatchEvent(new Event("csi_data_updated"));
     }
     return true;
   },

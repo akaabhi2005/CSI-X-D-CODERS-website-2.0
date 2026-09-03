@@ -295,10 +295,11 @@ export default function AdminPage() {
     }
   };
 
-  const handleFileUpload = async (file: File): Promise<string> => {
+  const handleFileUpload = async (file: File, folder: string = "gallery"): Promise<string> => {
     try {
       const formData = new FormData();
       formData.append("file", file);
+      formData.append("folder", folder);
       const res = await fetch("/api/upload", {
         method: "POST",
         body: formData,
@@ -325,10 +326,10 @@ export default function AdminPage() {
     e.preventDefault();
     if (!eventForm.title || !eventForm.date) return;
 
-    let finalImageUrl = eventForm.image || "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&q=80&w=800&h=400";
+    let finalImageUrl = (eventForm.image || "").trim() || "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&q=80&w=800&h=400";
     if (eventSelectedFile) {
       setIsUploading(true);
-      finalImageUrl = await handleFileUpload(eventSelectedFile);
+      finalImageUrl = await handleFileUpload(eventSelectedFile, "events");
     }
     setIsUploading(false);
 
@@ -356,39 +357,37 @@ export default function AdminPage() {
       updated = [newItem, ...events];
     }
     setEvents(updated);
-    await DataStore.saveEvents(updated);
     setModalMode(null);
     showToast("Event saved successfully & updated on Homepage Featured Highlights!");
+    DataStore.saveEvents(updated);
   };
 
-  const handleEventCategoryChange = async (id: string, newCategory: "upcoming" | "current" | "past") => {
+  const handleEventCategoryChange = (id: string, newCategory: "upcoming" | "current" | "past") => {
     const updated = events.map(ev => {
       if (ev.id === id) {
-        // If moving to upcoming or current, automatically set isFeatured to true
         const shouldBeFeatured = newCategory === "upcoming" || newCategory === "current" ? true : ev.isFeatured;
         return { ...ev, category: newCategory, isFeatured: shouldBeFeatured };
       }
       return ev;
     });
     setEvents(updated);
-    await DataStore.saveEvents(updated);
     showToast(`Event status updated to "${newCategory}"`);
+    DataStore.saveEvents(updated);
   };
 
-  const handleToggleEventFeatured = async (id: string) => {
+  const handleToggleEventFeatured = (id: string) => {
     const updated = events.map(ev => ev.id === id ? { ...ev, isFeatured: !ev.isFeatured } : ev);
     setEvents(updated);
-    await DataStore.saveEvents(updated);
-    const target = updated.find(ev => ev.id === id);
-    showToast(target?.isFeatured ? "Marked as Featured Highlight ⭐" : "Removed from Featured Highlights");
+    showToast("Homepage featured status updated!");
+    DataStore.saveEvents(updated);
   };
 
-  const handleDeleteEvent = async (id: string) => {
+  const handleDeleteEvent = (id: string) => {
     if (!confirm("Are you sure you want to delete this event?")) return;
-    const updated = events.filter(e => e.id !== id);
+    const updated = events.filter(ev => ev.id !== id);
     setEvents(updated);
-    await DataStore.saveEvents(updated);
     showToast("Event deleted.");
+    DataStore.saveEvents(updated);
   };
 
   // --- TEAM CRUD --- //
@@ -426,14 +425,20 @@ export default function AdminPage() {
       .map(s => s.trim())
       .filter(s => s !== "");
 
-    let finalImageUrl = teamForm.image || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300";
+    let finalImageUrl = (teamForm.image || "").trim() || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300";
 
     if (teamSelectedFile) {
       setIsUploading(true);
-      finalImageUrl = await handleFileUpload(teamSelectedFile);
+      finalImageUrl = await handleFileUpload(teamSelectedFile, "team");
     }
     
     setIsUploading(false);
+
+    const cleanSocials = {
+      linkedin: teamForm.socials?.linkedin?.trim() || undefined,
+      github: teamForm.socials?.github?.trim() || undefined,
+      email: teamForm.socials?.email?.trim() || undefined,
+    };
 
     let updated: TeamMemberItem[];
     if (modalMode === "edit" && editingId) {
@@ -441,9 +446,15 @@ export default function AdminPage() {
       updated = team.map(m => m.id === editingId ? {
         ...m,
         ...cleanTeamForm,
+        name: teamForm.name || m.name,
+        position: teamForm.position || m.position,
+        level: teamForm.level || m.level || 5,
+        domain: teamForm.domain || m.domain || "technical",
+        branch: teamForm.branch ?? m.branch ?? "",
+        bio: teamForm.bio ?? m.bio ?? "",
         image: finalImageUrl,
         skills: skillsArray,
-        socials: cleanTeamForm.socials || {}
+        socials: cleanSocials
       } as TeamMemberItem : m);
     } else {
       const newItem: TeamMemberItem = {
@@ -456,17 +467,17 @@ export default function AdminPage() {
         level: teamForm.level || 5,
         domain: teamForm.domain || "technical",
         skills: skillsArray,
-        socials: teamForm.socials || {}
+        socials: cleanSocials
       };
       updated = [...team, newItem];
     }
     setTeam(updated);
-    await DataStore.saveTeam(updated);
     setModalMode(null);
     showToast("Team member saved successfully!");
+    DataStore.saveTeam(updated);
   };
 
-  const handleDuplicateTeam = async (item: TeamMemberItem) => {
+  const handleDuplicateTeam = (item: TeamMemberItem) => {
     const duplicated: TeamMemberItem = {
       ...item,
       id: `team-${Date.now()}`,
@@ -474,16 +485,16 @@ export default function AdminPage() {
     };
     const updated = [...team, duplicated];
     setTeam(updated);
-    await DataStore.saveTeam(updated);
     showToast(`Duplicated ${item.name}`);
+    DataStore.saveTeam(updated);
   };
 
-  const handleDeleteTeam = async (id: string) => {
+  const handleDeleteTeam = (id: string) => {
     if (!confirm("Are you sure you want to delete this team member?")) return;
     const updated = team.filter(m => m.id !== id);
     setTeam(updated);
-    await DataStore.saveTeam(updated);
     showToast("Team member removed.");
+    DataStore.saveTeam(updated);
   };
 
   // --- LEGACY (HALL OF FAME) CRUD --- //
@@ -513,10 +524,10 @@ export default function AdminPage() {
     if (!legacyForm.name || !legacyForm.bio) return;
 
     setIsUploading(true);
-    let finalImageUrl = legacyForm.image || "";
+    let finalImageUrl = (legacyForm.image || "").trim() || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400&h=400";
 
     if (legacySelectedFile) {
-      finalImageUrl = await handleFileUpload(legacySelectedFile);
+      finalImageUrl = await handleFileUpload(legacySelectedFile, "legacy");
     }
 
     let updated: LegacyHeadItem[];
@@ -536,18 +547,18 @@ export default function AdminPage() {
       updated = [...legacyHeads, newItem];
     }
     setLegacyHeads(updated);
-    await DataStore.saveLegacyHeads(updated);
     setModalMode(null);
     setIsUploading(false);
     showToast("Hall of Fame leader saved successfully!");
+    DataStore.saveLegacyHeads(updated);
   };
 
-  const handleDeleteLegacy = async (id: string) => {
+  const handleDeleteLegacy = (id: string) => {
     if (!confirm("Are you sure you want to delete this alumni leader?")) return;
     const updated = legacyHeads.filter(l => l.id !== id);
     setLegacyHeads(updated);
-    await DataStore.saveLegacyHeads(updated);
     showToast("Alumni leader removed.");
+    DataStore.saveLegacyHeads(updated);
   };
 
   // --- ABOUT SUB-TEAMS CRUD --- //
@@ -602,17 +613,17 @@ export default function AdminPage() {
       updated = [...subTeams, newItem];
     }
     setSubTeams(updated);
-    await DataStore.saveSubTeams(updated);
     setModalMode(null);
     showToast("Sub-Team domain saved!");
+    DataStore.saveSubTeams(updated);
   };
 
-  const handleDeleteSubTeam = async (id: string) => {
+  const handleDeleteSubTeam = (id: string) => {
     if (!confirm("Are you sure you want to delete this sub-team?")) return;
     const updated = subTeams.filter(s => s.id !== id);
     setSubTeams(updated);
-    await DataStore.saveSubTeams(updated);
     showToast("Sub-Team removed.");
+    DataStore.saveSubTeams(updated);
   };
 
   // --- ABOUT CORE VALUES CRUD --- //
@@ -667,17 +678,17 @@ export default function AdminPage() {
       updated = [...coreValues, newItem];
     }
     setCoreValues(updated);
-    await DataStore.saveCoreValues(updated);
     setModalMode(null);
     showToast("Core Value pillar saved!");
+    DataStore.saveCoreValues(updated);
   };
 
-  const handleDeleteCoreValue = async (id: string) => {
+  const handleDeleteCoreValue = (id: string) => {
     if (!confirm("Are you sure you want to delete this core value?")) return;
     const updated = coreValues.filter(c => c.id !== id);
     setCoreValues(updated);
-    await DataStore.saveCoreValues(updated);
     showToast("Core Value removed.");
+    DataStore.saveCoreValues(updated);
   };
 
   // --- NEWS GAZETTE CRUD --- //
@@ -749,27 +760,27 @@ export default function AdminPage() {
       }
     }
     setNewsIssues(updated);
-    await DataStore.saveNewsIssues(updated);
     setModalMode(null);
     showToast("News Gazette edition saved!");
+    DataStore.saveNewsIssues(updated);
   };
 
-  const handleSetCurrentNews = async (id: string) => {
+  const handleSetCurrentNews = (id: string) => {
     const updated = newsIssues.map(n => ({
       ...n,
       isCurrent: n.id === id
     }));
     setNewsIssues(updated);
-    await DataStore.saveNewsIssues(updated);
     showToast("Current live edition updated!");
+    DataStore.saveNewsIssues(updated);
   };
 
-  const handleDeleteNews = async (id: string) => {
+  const handleDeleteNews = (id: string) => {
     if (!confirm("Are you sure you want to delete this edition?")) return;
     const updated = newsIssues.filter(n => n.id !== id);
     setNewsIssues(updated);
-    await DataStore.saveNewsIssues(updated);
     showToast("News edition removed.");
+    DataStore.saveNewsIssues(updated);
   };
 
   // --- GALLERY CRUD --- //
@@ -816,36 +827,34 @@ export default function AdminPage() {
       updated = [newItem, ...gallery];
     }
     setGallery(updated);
-    await DataStore.saveGallery(updated);
-    
-    // Reset states
     setGallerySelectedFile(null);
     setIsUploading(false);
     setModalMode(null);
     showToast("Gallery moment saved!");
+    DataStore.saveGallery(updated);
   };
 
-  const handleDeleteGallery = async (id: string) => {
+  const handleDeleteGallery = (id: string) => {
     if (!confirm("Are you sure you want to delete this photo?")) return;
     const updated = gallery.filter(g => g.id !== id);
     setGallery(updated);
-    await DataStore.saveGallery(updated);
     showToast("Gallery photo removed.");
+    DataStore.saveGallery(updated);
   };
 
   // --- STATS UPDATE --- //
-  const handleSaveStats = async (e: React.FormEvent) => {
+  const handleSaveStats = (e: React.FormEvent) => {
     e.preventDefault();
-    await DataStore.saveStats(stats);
     showToast("Homepage metrics saved successfully!");
+    DataStore.saveStats(stats);
   };
 
   // --- SUBSCRIBER MANAGEMENT --- //
-  const handleDeleteSubscriber = async (identifier: string) => {
+  const handleDeleteSubscriber = (identifier: string) => {
     if (!confirm(`Are you sure you want to remove subscriber: ${identifier}?`)) return;
-    await DataStore.deleteSubscriber(identifier);
-    setSubscribers(await DataStore.getSubscribers());
-    showToast("Subscriber removed successfully.");
+    setSubscribers(prev => prev.filter(s => s.id !== identifier && s.email !== identifier));
+    showToast("Subscriber removed.");
+    DataStore.deleteSubscriber(identifier);
   };
 
   const handleExportSubscribersCSV = () => {
@@ -2119,30 +2128,34 @@ export default function AdminPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-mono uppercase text-slate-400 mb-1 font-bold">
-                    Upload Banner Photo (JPG, PNG, WEBP)
+                    Banner Photo (File Upload OR Image URL)
                   </label>
-                  <input 
-                    type="file" 
-                    accept="image/jpeg, image/png, image/webp, image/jpg"
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files.length > 0) {
-                        const file = e.target.files[0];
-                        setEventSelectedFile(file);
-                        const localPreview = URL.createObjectURL(file);
-                        setEventForm({ ...eventForm, image: localPreview });
-                      }
-                    }} 
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-sky-500/20 file:text-sky-400 hover:file:bg-sky-500/30 cursor-pointer" 
-                  />
-                  {eventSelectedFile && (
-                    <div className="mt-1.5 text-xs text-sky-400 font-mono font-bold">
-                      Selected: {eventSelectedFile.name}
-                    </div>
-                  )}
+                  <div className="space-y-2">
+                    <input 
+                      type="text" 
+                      placeholder="Image URL (e.g. /events/python.jpg or https://...)" 
+                      value={eventForm.image || ""} 
+                      onChange={(e) => setEventForm({ ...eventForm, image: e.target.value })} 
+                      className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm font-mono" 
+                    />
+                    <input 
+                      type="file" 
+                      accept="image/jpeg, image/png, image/webp, image/jpg"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files.length > 0) {
+                          const file = e.target.files[0];
+                          setEventSelectedFile(file);
+                          const localPreview = URL.createObjectURL(file);
+                          setEventForm({ ...eventForm, image: localPreview });
+                        }
+                      }} 
+                      className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-sky-500/20 file:text-sky-400 hover:file:bg-sky-500/30 cursor-pointer" 
+                    />
+                  </div>
                   {/* Image Preview */}
-                  {eventForm.image && (
-                    <div className="mt-2 rounded-xl overflow-hidden border border-slate-800 h-28 bg-black relative">
-                      <img src={eventForm.image} alt="Banner Preview" className="w-full h-full object-cover object-top" onError={(e) => { (e.target as any).style.display = 'none'; }} />
+                  {(eventForm.image || eventSelectedFile) && (
+                    <div className="mt-2.5 rounded-xl overflow-hidden border border-slate-800 h-28 bg-black relative">
+                      <img src={eventSelectedFile ? URL.createObjectURL(eventSelectedFile) : eventForm.image} alt="Banner Preview" className="w-full h-full object-cover object-top" onError={(e) => { (e.target as any).style.display = 'none'; }} />
                       <div className="absolute top-2 left-2 bg-slate-900/80 backdrop-blur-md px-2 py-0.5 rounded text-[10px] text-slate-300 border border-slate-700 font-mono">
                         Banner Preview
                       </div>
@@ -2189,7 +2202,33 @@ export default function AdminPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-mono uppercase text-slate-400 mb-1">Position / Role</label>
-                  <input type="text" placeholder="e.g. FOUNDER & CEO or CORE COMMITTEE MEMBER" required value={teamForm.position || ""} onChange={(e) => setTeamForm({ ...teamForm, position: e.target.value })} className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm" />
+                  <input 
+                    type="text" 
+                    placeholder="e.g. Technical Head, Co-Head, PR & Marketing Member" 
+                    required 
+                    value={teamForm.position || ""} 
+                    onChange={(e) => {
+                      const posVal = e.target.value;
+                      const pUpper = posVal.toUpperCase();
+                      let autoLevel = teamForm.level || 5;
+                      let autoDomain = teamForm.domain || "technical";
+
+                      if (pUpper.includes("PRESIDENT") && !pUpper.includes("VICE")) autoLevel = 1;
+                      else if (pUpper.includes("VICE PRESIDENT") || pUpper.includes("VP")) autoLevel = 2;
+                      else if (pUpper.includes("HEAD") && !(pUpper.includes("CO-HEAD") || pUpper.includes("CO HEAD"))) autoLevel = 3;
+                      else if (pUpper.includes("CO-HEAD") || pUpper.includes("CO HEAD") || pUpper.includes("LEAD")) autoLevel = 4;
+                      else if (pUpper.includes("MEMBER")) autoLevel = 5;
+
+                      if (pUpper.includes("DESIGN") || pUpper.includes("UI/UX")) autoDomain = "design";
+                      else if (pUpper.includes("CONTENT")) autoDomain = "content";
+                      else if (pUpper.includes("PHOTO") || pUpper.includes("SOCIAL") || pUpper.includes("MEDIA")) autoDomain = "photo";
+                      else if (pUpper.includes("PR") || pUpper.includes("MARKETING") || pUpper.includes("OUTREACH")) autoDomain = "pr";
+                      else if (pUpper.includes("TECH") || pUpper.includes("CODE")) autoDomain = "technical";
+
+                      setTeamForm({ ...teamForm, position: posVal, level: autoLevel, domain: autoDomain });
+                    }} 
+                    className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm" 
+                  />
                 </div>
                 <div>
                   <label className="block text-xs font-mono uppercase text-slate-400 mb-1">Branch</label>
@@ -2213,31 +2252,50 @@ export default function AdminPage() {
                       <option value="content">Content</option>
                       <option value="design">Design</option>
                       <option value="photo">Photography</option>
-                      <option value="pr">PR & Marketing</option>
+                      <option value="pr">PR &amp; Marketing</option>
                     </select>
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-mono uppercase text-slate-400 mb-1">Upload Profile Photo (JPG, PNG)</label>
-                  <input 
-                    type="file" 
-                    accept="image/jpeg, image/png, image/webp, image/jpg"
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files.length > 0) {
-                        setTeamSelectedFile(e.target.files[0]);
-                      }
-                    }} 
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-sky-500/20 file:text-sky-400 hover:file:bg-sky-500/30" 
-                  />
-                  {teamForm.image && !teamSelectedFile && (
-                    <div className="mt-2 flex items-center gap-3 p-2 bg-slate-950 rounded-xl border border-slate-800">
-                      <img src={teamForm.image} alt="Preview" className="w-10 h-10 rounded-full object-cover border border-slate-700" onError={(e) => { (e.target as any).style.display = 'none'; }} />
-                      <span className="text-xs text-slate-400 font-mono truncate">Current Thumbnail</span>
-                    </div>
-                  )}
-                  {teamSelectedFile && (
-                    <div className="mt-2 text-xs text-sky-400 font-mono">
-                      Selected: {teamSelectedFile.name}
+                  <label className="block text-xs font-mono uppercase text-slate-400 mb-1 font-bold">Profile Photo (File Upload OR Image URL)</label>
+                  <div className="space-y-2">
+                    <input 
+                      type="text" 
+                      placeholder="Image URL (e.g. /team/aditya.jpg or https://...)" 
+                      value={teamForm.image || ""} 
+                      onChange={(e) => setTeamForm({ ...teamForm, image: e.target.value })} 
+                      className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm font-mono" 
+                    />
+                    <input 
+                      type="file" 
+                      accept="image/jpeg, image/png, image/webp, image/jpg"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files.length > 0) {
+                          const f = e.target.files[0];
+                          setTeamSelectedFile(f);
+                          const localPreview = URL.createObjectURL(f);
+                          setTeamForm({ ...teamForm, image: localPreview });
+                        }
+                      }} 
+                      className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-sky-500/20 file:text-sky-400 hover:file:bg-sky-500/30 cursor-pointer" 
+                    />
+                  </div>
+                  
+                  {/* Live Photo Preview */}
+                  {(teamForm.image || teamSelectedFile) && (
+                    <div className="mt-2.5 flex items-center gap-3 p-2.5 bg-slate-950 rounded-xl border border-slate-800">
+                      <img 
+                        src={teamSelectedFile ? URL.createObjectURL(teamSelectedFile) : teamForm.image} 
+                        alt="Profile Preview" 
+                        className="w-12 h-12 rounded-full object-cover border border-sky-500/50 shadow-md shrink-0" 
+                        onError={(e) => { (e.target as any).style.display = 'none'; }} 
+                      />
+                      <div className="min-w-0 flex-1">
+                        <span className="text-[10px] font-mono uppercase text-sky-400 font-bold block">Live Thumbnail Preview</span>
+                        <span className="text-xs text-slate-400 font-mono truncate block">
+                          {teamSelectedFile ? `File: ${teamSelectedFile.name}` : (teamForm.image || "Default")}
+                        </span>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -2375,26 +2433,43 @@ export default function AdminPage() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-mono uppercase text-slate-400 mb-1">Upload Photo (JPG, PNG, WebP)</label>
-                  <input 
-                    type="file" 
-                    accept="image/jpeg, image/png, image/webp, image/jpg"
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files.length > 0) {
-                        setLegacySelectedFile(e.target.files[0]);
-                      }
-                    }} 
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-sky-500/20 file:text-sky-400 hover:file:bg-sky-500/30" 
-                  />
+                  <label className="block text-xs font-mono uppercase text-slate-400 mb-1 font-bold">Leader Photo (File Upload OR Image URL)</label>
+                  <div className="space-y-2">
+                    <input 
+                      type="text" 
+                      placeholder="Image URL (e.g. /team/legacy.jpg or https://...)" 
+                      value={legacyForm.image || ""} 
+                      onChange={(e) => setLegacyForm({ ...legacyForm, image: e.target.value })} 
+                      className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm font-mono" 
+                    />
+                    <input 
+                      type="file" 
+                      accept="image/jpeg, image/png, image/webp, image/jpg"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files.length > 0) {
+                          const f = e.target.files[0];
+                          setLegacySelectedFile(f);
+                          const localPreview = URL.createObjectURL(f);
+                          setLegacyForm({ ...legacyForm, image: localPreview });
+                        }
+                      }} 
+                      className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-sky-500/20 file:text-sky-400 hover:file:bg-sky-500/30 cursor-pointer" 
+                    />
+                  </div>
                   {(legacySelectedFile || legacyForm.image) && (
-                    <div className="mt-2 flex items-center gap-3 p-2 bg-slate-950 rounded-xl border border-slate-800">
+                    <div className="mt-2.5 flex items-center gap-3 p-2.5 bg-slate-950 rounded-xl border border-slate-800">
                       <img 
-                        src={legacySelectedFile ? URL.createObjectURL(legacySelectedFile) : (legacyForm.image || "")} 
+                        src={legacySelectedFile ? URL.createObjectURL(legacySelectedFile) : legacyForm.image} 
                         alt="Preview" 
-                        className="w-10 h-10 rounded-full object-cover border border-slate-700" 
+                        className="w-12 h-12 rounded-full object-cover border border-sky-500/50 shadow-md shrink-0" 
                         onError={(e) => { (e.target as any).style.display = 'none'; }} 
                       />
-                      <span className="text-xs text-slate-400 font-mono truncate">Photo Preview</span>
+                      <div className="min-w-0 flex-1">
+                        <span className="text-[10px] font-mono uppercase text-sky-400 font-bold block">Photo Preview</span>
+                        <span className="text-xs text-slate-400 font-mono truncate block">
+                          {legacySelectedFile ? `File: ${legacySelectedFile.name}` : (legacyForm.image || "Default")}
+                        </span>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -2475,25 +2550,40 @@ export default function AdminPage() {
                   <input type="text" required value={galleryForm.title || ""} onChange={(e) => setGalleryForm({ ...galleryForm, title: e.target.value })} className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm" />
                 </div>
                 <div>
-                  <label className="block text-xs font-mono uppercase text-slate-400 mb-1">Upload Image (JPG, PNG, WebP)</label>
-                  <input 
-                    type="file" 
-                    accept="image/jpeg, image/png, image/webp, image/jpg"
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files.length > 0) {
-                        setGallerySelectedFile(e.target.files[0]);
-                      }
-                    }} 
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-sky-500/20 file:text-sky-400 hover:file:bg-sky-500/30" 
-                  />
+                  <label className="block text-xs font-mono uppercase text-slate-400 mb-1 font-bold font-mono">Photo Image (File Upload OR Image URL)</label>
+                  <div className="space-y-2">
+                    <input 
+                      type="text" 
+                      placeholder="Image URL (e.g. /events/photo.jpg or https://...)" 
+                      value={galleryForm.image || ""} 
+                      onChange={(e) => setGalleryForm({ ...galleryForm, image: e.target.value })} 
+                      className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm font-mono" 
+                    />
+                    <input 
+                      type="file" 
+                      accept="image/jpeg, image/png, image/webp, image/jpg"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files.length > 0) {
+                          const f = e.target.files[0];
+                          setGallerySelectedFile(f);
+                          const localPreview = URL.createObjectURL(f);
+                          setGalleryForm({ ...galleryForm, image: localPreview });
+                        }
+                      }} 
+                      className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-sky-500/20 file:text-sky-400 hover:file:bg-sky-500/30 cursor-pointer" 
+                    />
+                  </div>
                   {(gallerySelectedFile || galleryForm.image) && (
-                    <div className="mt-2 rounded-xl overflow-hidden border border-slate-800 h-28 bg-black">
+                    <div className="mt-2.5 rounded-xl overflow-hidden border border-slate-800 h-28 bg-black relative">
                       <img 
-                        src={gallerySelectedFile ? URL.createObjectURL(gallerySelectedFile) : (galleryForm.image || "")} 
+                        src={gallerySelectedFile ? URL.createObjectURL(gallerySelectedFile) : galleryForm.image} 
                         alt="Preview" 
                         className="w-full h-full object-cover" 
                         onError={(e) => { (e.target as any).style.display = 'none'; }} 
                       />
+                      <div className="absolute top-2 left-2 bg-slate-900/80 backdrop-blur-md px-2 py-0.5 rounded text-[10px] text-slate-300 border border-slate-700 font-mono">
+                        Gallery Photo Preview
+                      </div>
                     </div>
                   )}
                 </div>

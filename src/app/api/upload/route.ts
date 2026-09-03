@@ -20,8 +20,12 @@ export async function POST(req: NextRequest) {
     const originalName = file.name.replace(/\s+/g, "_");
     const filename = `${timestamp}_${originalName}`;
     
-    // Directory path: public/gallery
-    const dirPath = join(process.cwd(), "public", "gallery");
+    const rawFolder = ((data.get("folder") as string) || (data.get("type") as string) || "gallery").toLowerCase();
+    const allowedFolders = ["team", "events", "legacy", "news", "gallery"];
+    const subDir = allowedFolders.includes(rawFolder) ? rawFolder : "gallery";
+
+    // Directory path
+    const dirPath = join(process.cwd(), "public", subDir);
     
     // Try local filesystem write (for local dev)
     try {
@@ -30,7 +34,7 @@ export async function POST(req: NextRequest) {
       }
       const filepath = join(dirPath, filename);
       await writeFile(filepath, buffer);
-      return NextResponse.json({ success: true, url: `/gallery/${filename}` });
+      return NextResponse.json({ success: true, url: `/${subDir}/${filename}` });
     } catch (diskErr) {
       console.warn("Disk write failed (Serverless/Vercel environment). Falling back to Base64 Data URL:", diskErr);
       const mimeType = file.type || "image/jpeg";

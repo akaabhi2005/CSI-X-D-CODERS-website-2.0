@@ -246,9 +246,21 @@ export default function AboutPage() {
   const [flippedCards, setFlippedCards] = useState<Record<string, boolean>>({});
   const { config } = useTheme();
 
-  const [subTeamsList, setSubTeamsList] = useState(subTeams);
-  const [coreValuesList, setCoreValuesList] = useState(coreValues);
-  const [legacyList, setLegacyList] = useState(pastHeads);
+  const [subTeamsList, setSubTeamsList] = useState(() => 
+    DataStore.getSubTeamsSync().map(s => ({ ...s, icon: getSubTeamIcon(s.title) }))
+  );
+  const [coreValuesList, setCoreValuesList] = useState(() => 
+    DataStore.getCoreValuesSync().map(c => ({ ...c, icon: getCoreValueIcon(c.title) }))
+  );
+  const [legacyList, setLegacyList] = useState(() => 
+    DataStore.getLegacyHeadsSync().map(l => ({
+      name: l.name,
+      role: l.role,
+      image: l.image || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400&h=400",
+      placedAt: l.placedAt || "Top Tech Tier",
+      backBio: l.bio
+    }))
+  );
 
   useEffect(() => {
     const loadData = async () => {
@@ -257,19 +269,19 @@ export default function AboutPage() {
         DataStore.getCoreValues(),
         DataStore.getLegacyHeads()
       ]);
-      if (storedSubTeams && storedSubTeams.length > 0) {
+      if (storedSubTeams) {
         setSubTeamsList(storedSubTeams.map(s => ({
           ...s,
           icon: getSubTeamIcon(s.title)
         })));
       }
-      if (storedCoreValues && storedCoreValues.length > 0) {
+      if (storedCoreValues) {
         setCoreValuesList(storedCoreValues.map(c => ({
           ...c,
           icon: getCoreValueIcon(c.title)
         })));
       }
-      if (storedLegacy && storedLegacy.length > 0) {
+      if (storedLegacy) {
         setLegacyList(storedLegacy.map(l => ({
           name: l.name,
           role: l.role,

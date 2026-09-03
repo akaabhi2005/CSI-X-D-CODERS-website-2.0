@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaLinkedin, FaGithub, FaInstagram } from "react-icons/fa";
 import { Sparkles, Mail } from "lucide-react";
@@ -8,36 +8,39 @@ import { useTheme } from "@/lib/themeContext";
 import { cn } from "@/lib/utils";
 import { DataStore, TeamMemberItem } from "@/lib/dataStore";
 
-// Removed hardcoded defaultTeam array
-
 type OpenDirection = "left" | "right" | "bottom";
 
-const HackerText = React.memo(({ text, className }: { text: string; className?: string }) => {
-  const [displayText, setDisplayText] = useState(text);
+const HackerText = React.memo(({ text = "", className }: { text?: string; className?: string }) => {
+  const safeText = text || "";
+  const [displayText, setDisplayText] = useState(safeText);
   
   useEffect(() => {
+    if (!safeText) {
+      setDisplayText("");
+      return;
+    }
     let iteration = 0;
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
     
     const interval = setInterval(() => {
       setDisplayText(
-        text
+        safeText
           .split("")
           .map((letter, index) => {
-            if (index < iteration) return text[index];
+            if (index < iteration) return safeText[index];
             return chars[Math.floor(Math.random() * chars.length)];
           })
           .join("")
       );
       
-      if (iteration >= text.length) {
+      if (iteration >= safeText.length) {
         clearInterval(interval);
       }
       iteration += 1;
     }, 45);
     
     return () => clearInterval(interval);
-  }, [text]);
+  }, [safeText]);
 
   return <span className={className}>{displayText}</span>;
 });
@@ -370,27 +373,30 @@ export default function TeamPage() {
   const members = teamData.filter(m => m.level === 5);
 
   // Exact left-to-right domain sorting for Heads
-  const getHeadScore = (pos: string) => {
-    const p = (pos || "").toLowerCase();
-    if (p.includes("technical")) return 1;
-    if (p.includes("content")) return 2;
-    if (p.includes("design")) return 3;
-    if (p.includes("photo") || p.includes("social")) return 4;
+  const getHeadScore = (m: any) => {
+    const p = (m.position || "").toLowerCase();
+    const d = (m.domain || "").toLowerCase();
+    if (p.includes("technical") || d === "technical") return 1;
+    if (p.includes("content") || d === "content") return 2;
+    if (p.includes("design") || d === "design" || d === "designing") return 3;
+    if (p.includes("photo") || p.includes("social") || d === "photo" || d === "photography") return 4;
+    if (p.includes("pr") || p.includes("marketing") || d === "pr" || d === "marketing") return 5;
     return 99;
   };
-  const heads = [...rawHeads].sort((a, b) => getHeadScore(a.position) - getHeadScore(b.position));
+  const heads = [...rawHeads].sort((a, b) => getHeadScore(a) - getHeadScore(b));
 
   // Exact left-to-right domain sorting for Co-heads
-  const getCoHeadScore = (pos: string) => {
-    const p = (pos || "").toLowerCase();
-    if (p.includes("technical")) return 1;
-    if (p.includes("content")) return 2;
-    if (p.includes("design")) return 3;
-    if (p.includes("pr") || p.includes("marketing")) return 4;
-    if (p.includes("photo") || p.includes("social")) return 5;
+  const getCoHeadScore = (m: any) => {
+    const p = (m.position || "").toLowerCase();
+    const d = (m.domain || "").toLowerCase();
+    if (p.includes("technical") || d === "technical") return 1;
+    if (p.includes("content") || d === "content") return 2;
+    if (p.includes("design") || d === "design" || d === "designing") return 3;
+    if (p.includes("pr") || p.includes("marketing") || d === "pr" || d === "marketing") return 4;
+    if (p.includes("photo") || p.includes("social") || d === "photo" || d === "photography") return 5;
     return 99;
   };
-  const coheads = [...rawCoheads].sort((a, b) => getCoHeadScore(a.position) - getCoHeadScore(b.position));
+  const coheads = [...rawCoheads].sort((a, b) => getCoHeadScore(a) - getCoHeadScore(b));
   
   const techMembers = members.filter(m => m.domain === "technical");
   const contentMembers = members.filter(m => m.domain === "content");
