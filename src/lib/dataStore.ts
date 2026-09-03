@@ -298,6 +298,7 @@ export const defaultTeam: TeamMemberItem[] = [
   { 
     id: "OP-04", 
     level: 3,
+    domain: "technical",
     name: "Abhishek Soni", 
     position: "Technical Head", 
     image: "/team/abhishek.jpg.jpeg", 
@@ -308,6 +309,7 @@ export const defaultTeam: TeamMemberItem[] = [
   { 
     id: "OP-03", 
     level: 3,
+    domain: "content",
     name: "Asmi Tiwari", 
     position: "Content Head", 
     image: "/team/asmi.jpg.jpeg", 
@@ -318,6 +320,7 @@ export const defaultTeam: TeamMemberItem[] = [
   { 
     id: "OP-06", 
     level: 3,
+    domain: "design",
     name: "Jatin Pandey", 
     position: "Designing Head", 
     image: "/team/jatin.jpg.jpeg", 
@@ -328,6 +331,7 @@ export const defaultTeam: TeamMemberItem[] = [
   { 
     id: "OP-09", 
     level: 3,
+    domain: "photo",
     name: "Akshat Saxena", 
     position: "Photography Head", 
     image: "/team/akshat.jpg.jpeg", 
@@ -340,6 +344,7 @@ export const defaultTeam: TeamMemberItem[] = [
   { 
     id: "OP-05", 
     level: 4,
+    domain: "technical",
     name: "Abhinav Singh", 
     position: "Technical Co-head", 
     image: "/team/abhinav.jpg.jpeg", 
@@ -350,6 +355,7 @@ export const defaultTeam: TeamMemberItem[] = [
   { 
     id: "OP-07", 
     level: 4,
+    domain: "design",
     name: "Isha Gupta", 
     position: "Designing Co-head", 
     image: "/team/isha.jpg.jpeg", 
@@ -360,6 +366,7 @@ export const defaultTeam: TeamMemberItem[] = [
   { 
     id: "OP-08", 
     level: 4,
+    domain: "pr",
     name: "Ayush Pratap Singh", 
     position: "PR & Marketing Co-head", 
     image: "/team/ayush.jpg.jpeg", 
